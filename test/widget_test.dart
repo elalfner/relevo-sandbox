@@ -27,4 +27,105 @@ void main() {
     expect(find.text('0'), findsNothing);
     expect(find.text('1'), findsOneWidget);
   });
+
+  Future<void> tapAdd(WidgetTester tester, int times) async {
+    for (var i = 0; i < times; i++) {
+      await tester.tap(find.byIcon(Icons.add));
+    }
+    await tester.pump();
+  }
+
+  testWidgets('Reset sets a non-zero counter to 0', (tester) async {
+    await tester.pumpWidget(const MyApp());
+    await tapAdd(tester, 5);
+    expect(find.text('5'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('reset-button')));
+    await tester.pump();
+
+    expect(find.text('0'), findsOneWidget);
+    expect(find.text('5'), findsNothing);
+  });
+
+  testWidgets('Reset keeps a zero counter at 0', (tester) async {
+    await tester.pumpWidget(const MyApp());
+    expect(find.text('Reset'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('reset-button')));
+    await tester.pump();
+
+    expect(find.text('0'), findsOneWidget);
+  });
+
+  testWidgets('Reset sets a counter over 1000 to 0', (tester) async {
+    await tester.pumpWidget(const MyApp());
+    await tapAdd(tester, 1001);
+    expect(find.text('1001'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('reset-button')));
+    await tester.pump();
+
+    expect(find.text('0'), findsOneWidget);
+    expect(find.text('1001'), findsNothing);
+  });
+
+  testWidgets('Parity text says Even at 0', (tester) async {
+    await tester.pumpWidget(const MyApp());
+
+    expect(find.text('0'), findsOneWidget);
+    expect(find.text('Even'), findsOneWidget);
+    expect(find.text('Odd'), findsNothing);
+  });
+
+  testWidgets('Parity text says Even at 2, below the counter', (tester) async {
+    await tester.pumpWidget(const MyApp());
+    await tapAdd(tester, 2);
+
+    expect(find.text('2'), findsOneWidget);
+    expect(find.text('Even'), findsOneWidget);
+    expect(find.text('Odd'), findsNothing);
+    expect(
+      tester.getTopLeft(find.text('Even')).dy,
+      greaterThan(tester.getBottomLeft(find.text('2')).dy - 1),
+    );
+  });
+
+  testWidgets('Parity text says Odd at 3, below the counter', (tester) async {
+    await tester.pumpWidget(const MyApp());
+    await tapAdd(tester, 3);
+
+    expect(find.text('3'), findsOneWidget);
+    expect(find.text('Odd'), findsOneWidget);
+    expect(find.text('Even'), findsNothing);
+    expect(
+      tester.getTopLeft(find.text('Odd')).dy,
+      greaterThan(tester.getBottomLeft(find.text('3')).dy - 1),
+    );
+  });
+
+  testWidgets('Parity text says Even after reset from an odd count', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+    await tapAdd(tester, 3);
+    expect(find.text('Odd'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('reset-button')));
+    await tester.pump();
+
+    expect(find.text('Even'), findsOneWidget);
+    expect(find.text('Odd'), findsNothing);
+  });
+
+  testWidgets('Two quick taps on reset leave the counter at 0', (tester) async {
+    await tester.pumpWidget(const MyApp());
+    await tapAdd(tester, 3);
+
+    await tester.tap(find.byKey(const Key('reset-button')));
+    await tester.tap(find.byKey(const Key('reset-button')));
+    await tester.pump();
+
+    expect(find.text('0'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 }
