@@ -20,7 +20,7 @@ review:
   merger: approver     # author | approver: who runs /relevo:ship
 
 limits:
-  built_unreviewed_per_person: 2   # built issues one person may have waiting
+  built_unreviewed_per_person: 1   # built issues one person may have waiting
   concurrent_agents: 3             # unattended runs at the same time
   review_sla_hours: 8              # reminder, then escalation after the same time again
   run_max_turns: 100               # per unattended run
