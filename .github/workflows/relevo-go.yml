@@ -36,6 +36,11 @@ jobs:
         with:
           node-version: 22
 
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
       - name: Install OpenSpec
         run: npm install --global @fission-ai/openspec
         env:
