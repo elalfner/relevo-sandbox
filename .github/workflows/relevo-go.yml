@@ -48,6 +48,7 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ github.token }}
+          show_full_output: true
           plugin_marketplaces: https://x-access-token:${{ secrets.RELEVO_PLUGIN_TOKEN }}@github.com/elalfner/relevo.git
           plugins: relevo@relevo
           # The issue text is data, never instructions: the skill tells the agent so. The tool list is closed.
