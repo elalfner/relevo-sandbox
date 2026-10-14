@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+const String appVersion = 'v1.0.0';
+
 void main() {
   runApp(const MyApp());
 }
@@ -87,7 +89,20 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(widget.title),
+            const Text(
+              appVersion,
+              key: Key('app-version'),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 12),
+            ),
+          ],
+        ),
       ),
       body: Center(
         // Center is a layout widget. It takes a single child and positions it
