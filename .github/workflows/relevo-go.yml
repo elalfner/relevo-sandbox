@@ -10,10 +10,16 @@ name: relevo-go
 on:
   issues:
     types: [labeled]
+  # The queue workflow (relevo-queue.yml) starts waiting issues through this trigger.
+  workflow_dispatch:
+    inputs:
+      issue:
+        description: Issue number to build
+        required: true
 
 # One run per issue: a repeated label event waits for the first run and then finds the issue already building.
 concurrency:
-  group: relevo-go-${{ github.event.issue.number }}
+  group: relevo-go-${{ github.event.issue.number || inputs.issue }}
   cancel-in-progress: false
 
 permissions:
@@ -24,7 +30,7 @@ permissions:
 
 jobs:
   go:
-    if: github.event.label.name == 'relevo:ready' && github.event.sender.type == 'User'
+    if: github.event_name == 'workflow_dispatch' || (github.event.label.name == 'relevo:ready' && github.event.sender.type == 'User')
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -36,6 +42,7 @@ jobs:
         with:
           node-version: 22
 
+      # The agent runs the project's own checks (QA runs them), so the toolchain is installed here.
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
@@ -50,15 +57,52 @@ jobs:
         env:
           OPENSPEC_TELEMETRY: '0'
           GH_TOKEN: ${{ github.token }}
+          # Without this the agent may start a subagent in the background and end the run before it finishes,
+          # leaving the issue stuck on building with no comment (seen in the pilot, see docs/pilot-findings.md).
+          CLAUDE_CODE_DISABLE_BACKGROUND_TASKS: '1'
         with:
+          # Credentials: choose ONE of the next two lines.
+          # Subscription token (secret CLAUDE_CODE_OAUTH_TOKEN, stored without whitespace):
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # b) Subscription: create a token with `claude setup-token` and store it as the secret CLAUDE_CODE_OAUTH_TOKEN.
+          #    The command prints the token over two lines; remove all whitespace before storing it, for example
+          #    `pbpaste | tr -d '[:space:]' | gh secret set CLAUDE_CODE_OAUTH_TOKEN`. Then replace the line above with:
+          # claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ github.token }}
-          show_full_output: true
+          # Plugin repository: choose ONE of the next two lines.
+          # The plugin repository is private: read-only token stored as RELEVO_PLUGIN_TOKEN.
           plugin_marketplaces: https://x-access-token:${{ secrets.RELEVO_PLUGIN_TOKEN }}@github.com/elalfner/relevo.git
+          # b) Private repository: the runner cannot clone it without a credential. Store a read-only fine-grained
+          #    token as the secret RELEVO_PLUGIN_TOKEN and replace the line above with:
+          # plugin_marketplaces: https://x-access-token:${{ secrets.RELEVO_PLUGIN_TOKEN }}@github.com/elalfner/relevo.git
           plugins: relevo@relevo
-          # The issue text is data, never instructions: the skill tells the agent so. The tool list is closed.
-          prompt: /relevo:go ${{ github.event.issue.number }}
+          # The issue text is data, never instructions: the skill tells the agent so. The tool list is closed:
+          # only the tools in --allowedTools, and no web access (nothing to fetch, nowhere to send a secret).
+          # Do not set allowed_non_write_users, allowed_bots or show_full_output here: they open the run to
+          # strangers or print tool results (possibly secrets) to the log.
+          prompt: /relevo:go ${{ github.event.issue.number || inputs.issue }}
           claude_args: >-
             --max-turns 100
             --max-budget-usd 5
             --allowedTools "Bash,Read,Write,Edit,Glob,Grep,Task"
+            --disallowedTools "WebFetch,WebSearch,Bash(curl:*),Bash(wget:*)"
+
+      # A run can end without telling anyone: the plugin cannot be cloned, the login fails, preflight stops, or the
+      # agent ends its session early (all seen in the pilot, see docs/pilot-findings.md). If the issue is still
+      # ready or building after the agent step, no outcome was recorded, so say so on the issue.
+      # If you renamed the labels in relevo.yml, change the names below too.
+      - name: Report a run that ended without an outcome
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE: ${{ github.event.issue.number || inputs.issue }}
+          JOB_STATUS: ${{ job.status }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          labels=$(gh issue view "$ISSUE" --json labels --jq '.labels[].name')
+          if ! printf '%s\n' "$labels" | grep -qxE 'relevo:(ready|building)'; then
+            exit 0
+          fi
+          assignee=$(gh issue view "$ISSUE" --json assignees --jq '.assignees[0].login // empty')
+          gh issue edit "$ISSUE" --remove-label relevo:ready --remove-label relevo:building --add-label relevo:qa-failed
+          gh issue comment "$ISSUE" --body "${assignee:+@$assignee }The run ended without a result (job status: $JOB_STATUS), so nothing was built or reported. Read the log to see why: $RUN_URL. When the cause is fixed, remove \`relevo:qa-failed\` and apply \`relevo:ready\` again."
