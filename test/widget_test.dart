@@ -128,4 +128,32 @@ void main() {
     expect(find.text('0'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('App bar shows the version subtitle', (tester) async {
+    await tester.pumpWidget(const MyApp());
+
+    final version = find.byKey(const Key('app-version'));
+    expect(version, findsOneWidget);
+    expect(
+      find.descendant(of: find.byType(AppBar), matching: version),
+      findsOneWidget,
+    );
+    expect(tester.widget<Text>(version).data, 'v1.0.0');
+    expect(find.text('v1.0.0'), findsOneWidget);
+  });
+
+  testWidgets('Version subtitle is ellipsized on a very small screen', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(100, 600);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(const MyApp());
+
+    final text = tester.widget<Text>(find.byKey(const Key('app-version')));
+    expect(text.maxLines, 1);
+    expect(text.overflow, TextOverflow.ellipsis);
+    expect(tester.takeException(), isNull);
+  });
 }
