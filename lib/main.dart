@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 const String appVersion = 'v1.0.0';
 
@@ -72,11 +73,25 @@ String greetingForHour(int hour) {
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
   late final String _greeting;
+  String? _buildNumber;
 
   @override
   void initState() {
     super.initState();
     _greeting = greetingForHour(widget.clock().hour);
+    _loadBuildNumber();
+  }
+
+  /// Reads the build number from the platform. Errors and empty values leave
+  /// it null, so nothing is shown in its place.
+  Future<void> _loadBuildNumber() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+      if (!mounted || info.buildNumber.isEmpty) return;
+      setState(() => _buildNumber = info.buildNumber);
+    } catch (_) {
+      // Unreadable build number: keep showing only the version label.
+    }
   }
 
   void _incrementCounter() {
@@ -115,12 +130,31 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(widget.title),
-            const Text(
-              appVersion,
-              key: Key('app-version'),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 12),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Flexible(
+                  child: Text(
+                    appVersion,
+                    key: Key('app-version'),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ),
+                if (_buildNumber != null) ...[
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      'Build $_buildNumber',
+                      key: const Key('app-build'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ],
         ),
