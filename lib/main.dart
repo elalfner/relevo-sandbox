@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 
+const String appVersion = 'v1.0.0';
+
 void main() {
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({super.key, this.clock = DateTime.now});
+
+  /// Source of the current time, used to choose the greeting.
+  final DateTime Function() clock;
 
   // This widget is the root of your application.
   @override
@@ -30,13 +35,13 @@ class MyApp extends StatelessWidget {
         // tested with just a hot reload.
         colorScheme: .fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: MyHomePage(title: 'Flutter Demo Home Page', clock: clock),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+  const MyHomePage({super.key, required this.title, this.clock = DateTime.now});
 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
@@ -49,12 +54,30 @@ class MyHomePage extends StatefulWidget {
 
   final String title;
 
+  /// Source of the current time, read once to choose the greeting.
+  final DateTime Function() clock;
+
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
+/// Returns the greeting for [hour] (0-23): morning 5-11, afternoon 12-17,
+/// evening otherwise.
+String greetingForHour(int hour) {
+  if (hour >= 5 && hour < 12) return 'Good morning';
+  if (hour >= 12 && hour < 18) return 'Good afternoon';
+  return 'Good evening';
+}
+
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
+  late final String _greeting;
+
+  @override
+  void initState() {
+    super.initState();
+    _greeting = greetingForHour(widget.clock().hour);
+  }
 
   void _incrementCounter() {
     setState(() {
@@ -87,42 +110,63 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(widget.title),
+            const Text(
+              appVersion,
+              key: Key('app-version'),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 12),
+            ),
+          ],
+        ),
       ),
       body: Center(
         // Center is a layout widget. It takes a single child and positions it
         // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: .center,
-          children: [
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            Text(
-              _counter.isEven ? 'Even' : 'Odd',
-              key: const Key('parity-text'),
-            ),
-            TextButton(
-              key: const Key('reset-button'),
-              onPressed: _resetCounter,
-              child: const Text('Reset'),
-            ),
-          ],
+        child: SingleChildScrollView(
+          child: Column(
+            // Column is also a layout widget. It takes a list of children and
+            // arranges them vertically. By default, it sizes itself to fit its
+            // children horizontally, and tries to be as tall as its parent.
+            //
+            // Column has various properties to control how it sizes itself and
+            // how it positions its children. Here we use mainAxisAlignment to
+            // center the children vertically; the main axis here is the vertical
+            // axis because Columns are vertical (the cross axis would be
+            // horizontal).
+            //
+            // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
+            // action in the IDE, or press "p" in the console), to see the
+            // wireframe for each widget.
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                _greeting,
+                key: const Key('greeting-text'),
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
+              const Text('You have pushed the button this many times:'),
+              Text(
+                '$_counter',
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
+              Text(
+                _counter.isEven ? 'Even' : 'Odd',
+                key: const Key('parity-text'),
+              ),
+              TextButton(
+                key: const Key('reset-button'),
+                onPressed: _resetCounter,
+                child: const Text('Reset'),
+              ),
+            ],
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
