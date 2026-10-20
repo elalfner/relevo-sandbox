@@ -10,6 +10,8 @@ tracker: github        # github (more later)
 git_provider: github   # github (more later)
 platform: flutter-android
 
+links: [elalfner/relevo]   # repositories an issue may depend on (Depends-on: owner/repo#N)
+
 team:
   members: [elalfner]          # GitHub usernames of the people who build and review
   spec_writer: null    # writes the specs; never reviews or merges
