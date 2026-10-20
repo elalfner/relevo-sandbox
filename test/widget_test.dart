@@ -117,6 +117,47 @@ void main() {
     expect(find.text('Odd'), findsNothing);
   });
 
+  testWidgets('Thirteen message is shown at 13, below the parity text', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+    await tapAdd(tester, 13);
+
+    expect(find.text('13'), findsOneWidget);
+    expect(find.text('Thirteen reached'), findsOneWidget);
+    expect(find.byKey(const Key('thirteen-text')), findsOneWidget);
+    expect(
+      tester.getTopLeft(find.text('Thirteen reached')).dy,
+      greaterThan(
+        tester.getBottomLeft(find.byKey(const Key('parity-text'))).dy - 1,
+      ),
+    );
+  });
+
+  for (final count in [0, 12, 14]) {
+    testWidgets('Thirteen message is not shown at $count', (tester) async {
+      await tester.pumpWidget(const MyApp());
+      await tapAdd(tester, count);
+
+      expect(find.text('$count'), findsOneWidget);
+      expect(find.text('Thirteen reached'), findsNothing);
+    });
+  }
+
+  testWidgets('Thirteen message disappears after reset from 13', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+    await tapAdd(tester, 13);
+    expect(find.text('Thirteen reached'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('reset-button')));
+    await tester.pump();
+
+    expect(find.text('0'), findsOneWidget);
+    expect(find.text('Thirteen reached'), findsNothing);
+  });
+
   testWidgets('Two quick taps on reset leave the counter at 0', (tester) async {
     await tester.pumpWidget(const MyApp());
     await tapAdd(tester, 3);
