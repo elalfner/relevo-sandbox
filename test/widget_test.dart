@@ -129,6 +129,59 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('Nineteen message is hidden at 0', (tester) async {
+    await tester.pumpWidget(const MyApp());
+
+    expect(find.text('0'), findsOneWidget);
+    expect(find.text('Nineteen!'), findsNothing);
+  });
+
+  testWidgets('Nineteen message is hidden at 18', (tester) async {
+    await tester.pumpWidget(const MyApp());
+    await tapAdd(tester, 18);
+
+    expect(find.text('18'), findsOneWidget);
+    expect(find.text('Nineteen!'), findsNothing);
+  });
+
+  testWidgets('Nineteen message is visible at 19, below the counter', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+    await tapAdd(tester, 19);
+
+    expect(find.text('19'), findsOneWidget);
+    expect(find.text('Nineteen!'), findsOneWidget);
+    expect(
+      tester.getTopLeft(find.text('Nineteen!')).dy,
+      greaterThan(tester.getBottomLeft(find.text('19')).dy - 1),
+    );
+  });
+
+  testWidgets('Nineteen message disappears when going from 19 to 20', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+    await tapAdd(tester, 19);
+    expect(find.text('Nineteen!'), findsOneWidget);
+
+    await tapAdd(tester, 1);
+
+    expect(find.text('20'), findsOneWidget);
+    expect(find.text('Nineteen!'), findsNothing);
+  });
+
+  testWidgets('Nineteen message disappears on reset from 19', (tester) async {
+    await tester.pumpWidget(const MyApp());
+    await tapAdd(tester, 19);
+    expect(find.text('Nineteen!'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('reset-button')));
+    await tester.pump();
+
+    expect(find.text('Nineteen!'), findsNothing);
+  });
+
   testWidgets('App bar shows the version subtitle', (tester) async {
     await tester.pumpWidget(const MyApp());
 
