@@ -194,6 +194,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 _counter.isEven ? 'Even' : 'Odd',
                 key: const Key('parity-text'),
               ),
+              if (_counter == 11)
+                const Text('Eleven reached', key: Key('eleven-text')),
               TextButton(
                 key: const Key('reset-button'),
                 onPressed: _resetCounter,
