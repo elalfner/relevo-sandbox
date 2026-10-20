@@ -194,6 +194,13 @@ class _MyHomePageState extends State<MyHomePage> {
                 _counter.isEven ? 'Even' : 'Odd',
                 key: const Key('parity-text'),
               ),
+              if (_counter >= 10)
+                const Text(
+                  'Ten reached',
+                  key: Key('ten-text'),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               TextButton(
                 key: const Key('reset-button'),
                 onPressed: _resetCounter,
