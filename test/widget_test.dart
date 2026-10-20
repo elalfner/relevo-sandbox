@@ -156,4 +156,52 @@ void main() {
     expect(text.overflow, TextOverflow.ellipsis);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('Fifteen message is shown at 15, below the parity text', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+    await tapAdd(tester, 15);
+
+    expect(find.text('15'), findsOneWidget);
+    expect(find.text('Fifteen reached'), findsOneWidget);
+    expect(
+      tester.getTopLeft(find.text('Fifteen reached')).dy,
+      greaterThan(tester.getBottomLeft(find.text('Odd')).dy - 1),
+    );
+  });
+
+  testWidgets('Fifteen message is not shown at 0', (tester) async {
+    await tester.pumpWidget(const MyApp());
+
+    expect(find.text('Fifteen reached'), findsNothing);
+  });
+
+  testWidgets('Fifteen message is not shown at 14', (tester) async {
+    await tester.pumpWidget(const MyApp());
+    await tapAdd(tester, 14);
+
+    expect(find.text('14'), findsOneWidget);
+    expect(find.text('Fifteen reached'), findsNothing);
+  });
+
+  testWidgets('Fifteen message is not shown at 16', (tester) async {
+    await tester.pumpWidget(const MyApp());
+    await tapAdd(tester, 16);
+
+    expect(find.text('16'), findsOneWidget);
+    expect(find.text('Fifteen reached'), findsNothing);
+  });
+
+  testWidgets('Fifteen message disappears after reset from 15', (tester) async {
+    await tester.pumpWidget(const MyApp());
+    await tapAdd(tester, 15);
+    expect(find.text('Fifteen reached'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('reset-button')));
+    await tester.pump();
+
+    expect(find.text('0'), findsOneWidget);
+    expect(find.text('Fifteen reached'), findsNothing);
+  });
 }
