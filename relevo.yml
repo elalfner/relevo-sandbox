@@ -8,7 +8,11 @@ branches:
 
 tracker: github        # github (more later)
 git_provider: github   # github (more later)
-platform: flutter-android
+platforms:
+  app:
+    stack: flutter
+    path: .
+    targets: [android]
 
 team:
   members: [elalfner]          # GitHub usernames of the people who build and review
