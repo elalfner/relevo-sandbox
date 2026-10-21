@@ -129,11 +129,11 @@ jobs:
       # platform of the issue. The `decide` job tells which one (`needs.decide.outputs.stack`) and where it lives
       # (`needs.decide.outputs.path`), so an issue for the front does not install the back's tools. Uncomment the
       # examples your stacks need and adjust versions and caching; the names are the `stack` of relevo.yml:
-      #   - if: needs.decide.outputs.stack == 'flutter'
-      #     uses: subosito/flutter-action@v2
-      #     with:
-      #       channel: stable
-      #       cache: true
+      - if: needs.decide.outputs.stack == 'flutter'
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
       #   - if: needs.decide.outputs.stack == 'vue'
       #     uses: actions/setup-node@v4
       #     with:
