@@ -190,6 +190,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 '$_counter',
                 style: Theme.of(context).textTheme.headlineMedium,
               ),
+              if (_counter == 25)
+                const Text('Twenty-five!', key: Key('milestone-text')),
               Text(
                 _counter.isEven ? 'Even' : 'Odd',
                 key: const Key('parity-text'),
