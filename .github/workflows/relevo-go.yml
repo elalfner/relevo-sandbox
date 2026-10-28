@@ -1,5 +1,5 @@
 # relevo-template: 0.9.3
-# SANDBOX TEST COPY: the scripts come from the commit d3bb60b of github:elalfner/relevo instead of a published version. Do not copy this file to a project.
+# SANDBOX TEST COPY: the scripts come from the commit d3bb60b of github:elalfner/relevo instead of a published version (cloned and packed, because npm 10 cannot pack a git spec). Do not copy this file to a project.
 # Relevo: builds an issue when someone with write access labels it `relevo:ready`.
 # Copy to .github/workflows/relevo-go.yml. If you renamed the ready label in relevo.yml, change it below too.
 #
@@ -72,7 +72,7 @@ jobs:
         # script this job runs stops the run here, before anything is changed.
         run: |
           mkdir -p .relevo-plugin
-          npm pack "github:elalfner/relevo#d3bb60b38ddfc31c9d4b5477ab64a7ea37ccbf1c" --silent --pack-destination "$RUNNER_TEMP" > /dev/null
+          rm -rf "$RUNNER_TEMP/relevo-src" && git clone --quiet https://github.com/elalfner/relevo.git "$RUNNER_TEMP/relevo-src" && git -C "$RUNNER_TEMP/relevo-src" checkout --quiet d3bb60b38ddfc31c9d4b5477ab64a7ea37ccbf1c && npm pack "$RUNNER_TEMP/relevo-src" --silent --pack-destination "$RUNNER_TEMP" > /dev/null
           tar -xzf "$RUNNER_TEMP"/elalfner-relevo-*.tgz --strip-components=1 -C .relevo-plugin
           for f in scripts/go-plan.mjs; do
             [ -f ".relevo-plugin/$f" ] || { echo "::error::The Relevo package $RELEVO_VERSION lacks $f"; exit 1; }
@@ -199,7 +199,7 @@ jobs:
           PLATFORM: ${{ needs.decide.outputs.platform }}
         run: |
           mkdir -p "$RUNNER_TEMP/relevo"
-          npm pack "github:elalfner/relevo#d3bb60b38ddfc31c9d4b5477ab64a7ea37ccbf1c" --silent --pack-destination "$RUNNER_TEMP" > /dev/null
+          rm -rf "$RUNNER_TEMP/relevo-src" && git clone --quiet https://github.com/elalfner/relevo.git "$RUNNER_TEMP/relevo-src" && git -C "$RUNNER_TEMP/relevo-src" checkout --quiet d3bb60b38ddfc31c9d4b5477ab64a7ea37ccbf1c && npm pack "$RUNNER_TEMP/relevo-src" --silent --pack-destination "$RUNNER_TEMP" > /dev/null
           tar -xzf "$RUNNER_TEMP"/elalfner-relevo-*.tgz --strip-components=1 -C "$RUNNER_TEMP/relevo"
           for f in scripts/toolchain-check.mjs scripts/render-message.mjs .claude-plugin/plugin.json; do
             [ -f "$RUNNER_TEMP/relevo/$f" ] || { echo "::error::The Relevo package $RELEVO_VERSION lacks $f"; exit 1; }
@@ -287,7 +287,7 @@ jobs:
         continue-on-error: true
         run: |
           mkdir -p .relevo-plugin
-          npm pack "github:elalfner/relevo#d3bb60b38ddfc31c9d4b5477ab64a7ea37ccbf1c" --silent --pack-destination "$RUNNER_TEMP" > /dev/null
+          rm -rf "$RUNNER_TEMP/relevo-src" && git clone --quiet https://github.com/elalfner/relevo.git "$RUNNER_TEMP/relevo-src" && git -C "$RUNNER_TEMP/relevo-src" checkout --quiet d3bb60b38ddfc31c9d4b5477ab64a7ea37ccbf1c && npm pack "$RUNNER_TEMP/relevo-src" --silent --pack-destination "$RUNNER_TEMP" > /dev/null
           tar -xzf "$RUNNER_TEMP"/elalfner-relevo-*.tgz --strip-components=1 -C .relevo-plugin
           for f in scripts/run-usage.mjs scripts/usage-limit.mjs; do
             [ -f ".relevo-plugin/$f" ] || { echo "::error::The Relevo package $RELEVO_VERSION lacks $f"; exit 1; }
