@@ -1,3 +1,5 @@
+# relevo-template: 0.9.3
+# SANDBOX TEST COPY: the scripts come from the commit d3bb60b of github:elalfner/relevo instead of a published version. Do not copy this file to a project.
 # Relevo: builds an issue when someone with write access labels it `relevo:ready`.
 # Copy to .github/workflows/relevo-go.yml. If you renamed the ready label in relevo.yml, change it below too.
 #
@@ -10,12 +12,18 @@
 # Keep the numbers in claude_args in line with limits.run_max_turns and limits.run_max_cost.
 # Where the numbers disagree the lower one wins, so this file can only make a run cheaper than relevo.yml says.
 
+# Runner: `runs-on` comes from `runner.labels` in relevo.yml (`/relevo:init` writes it into this file, `/relevo:doctor` checks it).
+# The runner needs git, gh and jq; Node and the tools of the job are installed per job. A self-hosted runner is assumed to
+# persist between jobs, so the job puts its tools under $RUNNER_TEMP and removes what it adds to the workspace.
+
 name: relevo-go
 
 # The version of @elalfner/relevo whose scripts this workflow runs. The plugin's templates carry the version they
 # were released with, and `/relevo:init` reports this file as different when it is older; change it by hand to update.
 env:
-  RELEVO_VERSION: '0.3.0'
+  RELEVO_VERSION: '0.9.3'
+  # The version of OpenSpec that the job installs for itself.
+  OPENSPEC_VERSION: '1.14.3'
 
 on:
   issues:
@@ -64,7 +72,7 @@ jobs:
         # script this job runs stops the run here, before anything is changed.
         run: |
           mkdir -p .relevo-plugin
-          npm pack "@elalfner/relevo@$RELEVO_VERSION" --silent --pack-destination "$RUNNER_TEMP" > /dev/null
+          npm pack "github:elalfner/relevo#d3bb60b38ddfc31c9d4b5477ab64a7ea37ccbf1c" --silent --pack-destination "$RUNNER_TEMP" > /dev/null
           tar -xzf "$RUNNER_TEMP"/elalfner-relevo-*.tgz --strip-components=1 -C .relevo-plugin
           for f in scripts/go-plan.mjs; do
             [ -f ".relevo-plugin/$f" ] || { echo "::error::The Relevo package $RELEVO_VERSION lacks $f"; exit 1; }
@@ -82,8 +90,10 @@ jobs:
           GH_LINKS_TOKEN: ${{ secrets.RELEVO_LINKS_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           ISSUE: ${{ github.event.issue.number || inputs.issue }}
+          # relevo:credential begin
           # Without a model credential the cloud cannot build: the issue stays ready and a comment says to run it locally.
           HAS_CREDENTIAL: ${{ secrets.ANTHROPIC_API_KEY != '' || secrets.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+          # relevo:credential end
         run: node .relevo-plugin/scripts/go-plan.mjs --repo "$GITHUB_REPOSITORY" --only "$ISSUE" --apply --claim --credential "$HAS_CREDENTIAL" --github-output "$GITHUB_OUTPUT"
 
       # See the same step in `build`. A failure before the issue is claimed (the plugin cannot be cloned, the
@@ -107,6 +117,11 @@ jobs:
           gh issue edit "$ISSUE" --remove-label relevo:ready --remove-label relevo:queued --remove-label relevo:building --add-label relevo:qa-failed
           gh issue comment "$ISSUE" --body "${assignee:+@$assignee }The run failed before it could decide what to do (job status: $JOB_STATUS), so nothing was built. Read the log to see why: $RUN_URL. When the cause is fixed, remove \`relevo:qa-failed\` and apply \`relevo:ready\` again."
 
+      # A runner may keep its workspace between jobs (a self-hosted one does): remove what this job added to it.
+      - name: Remove what this job added
+        if: always()
+        run: rm -rf .relevo-plugin
+
   build:
     needs: decide
     if: needs.decide.outputs.action == 'start'
@@ -125,27 +140,37 @@ jobs:
         with:
           node-version: 22
 
-      # The agent runs the project's own checks (QA runs them), so install here the toolchain of the stack of the
-      # platform of the issue. The `decide` job tells which one (`needs.decide.outputs.stack`) and where it lives
-      # (`needs.decide.outputs.path`), so an issue for the front does not install the back's tools. Uncomment the
-      # examples your stacks need and adjust versions and caching; the names are the `stack` of relevo.yml:
+      # The agent runs the project's own checks (QA runs them), so the toolchain of the stack of the platform of the
+      # issue is installed here. The `decide` job tells which one (`needs.decide.outputs.stack`) and where it lives
+      # (`needs.decide.outputs.path`), so an issue for the front does not install the back's tools: a step whose stack
+      # is not the issue's is skipped and costs nothing. The names are the `stack` of relevo.yml. Change the versions
+      # and the caching to suit the project; `/relevo:doctor` fails when a Flutter, Laravel or Supabase platform has no
+      # active step below, because every build would fail QA after spending the run.
       - if: needs.decide.outputs.stack == 'flutter'
         uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
+      - if: needs.decide.outputs.stack == 'laravel'
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer
+      # Supabase: the CLI runs the checks of the profile against containers on the runner, which already has Docker.
+      - if: needs.decide.outputs.stack == 'supabase'
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      # Vue needs only Node, which this job installed above; to cache the packages, uncomment:
       #   - if: needs.decide.outputs.stack == 'vue'
       #     uses: actions/setup-node@v4
       #     with:
       #       node-version: 22
       #       cache: npm
       #       cache-dependency-path: ${{ needs.decide.outputs.path }}/package-lock.json
-      #   - if: needs.decide.outputs.stack == 'laravel'
-      #     uses: shivammathur/setup-php@v2
-      #     with:
-      #       php-version: '8.3'
-      #       tools: composer
-      # Install the dependencies of the platform from its folder, for example:
+      # Another stack: add a step guarded by its name, and its dependencies below.
+      # Installing the dependencies is the project's choice, because the package manager and the lockfile vary. Do it
+      # from the folder of the platform, for example:
       #   - if: needs.decide.outputs.stack == 'vue'
       #     working-directory: ${{ needs.decide.outputs.path }}
       #     run: npm ci --ignore-scripts
@@ -155,10 +180,68 @@ jobs:
       # the packages, so they need no such option.
 
       - name: Install OpenSpec
-        run: npm install --global @fission-ai/openspec
+        # Under the temporary folder of the job, at the pinned version: nothing global is left on a runner that persists.
+        run: |
+          npm install --prefix "$RUNNER_TEMP/openspec" "@fission-ai/openspec@$OPENSPEC_VERSION" --no-fund --no-audit
+          echo "$RUNNER_TEMP/openspec/node_modules/.bin" >> "$GITHUB_PATH"
         env:
           OPENSPEC_TELEMETRY: '0'
 
+      # Stops before the agent, without spending a model turn, when the runner lacks a tool that the profile of the
+      # platform lists (the Flutter SDK, PHP and Composer, ...): otherwise the developer writes the code and QA only
+      # finds out at the end, after a full run. The package is unpacked outside the workspace on purpose: the agent needs
+      # a clean working tree. The agent loads its plugin from this same folder (--plugin-dir), so a package without
+      # .claude-plugin/plugin.json stops the run here too. If you renamed the labels in relevo.yml, change the names below too.
+      - name: Check the toolchain
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE: ${{ github.event.issue.number || inputs.issue }}
+          PLATFORM: ${{ needs.decide.outputs.platform }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/relevo"
+          npm pack "github:elalfner/relevo#d3bb60b38ddfc31c9d4b5477ab64a7ea37ccbf1c" --silent --pack-destination "$RUNNER_TEMP" > /dev/null
+          tar -xzf "$RUNNER_TEMP"/elalfner-relevo-*.tgz --strip-components=1 -C "$RUNNER_TEMP/relevo"
+          for f in scripts/toolchain-check.mjs scripts/render-message.mjs .claude-plugin/plugin.json; do
+            [ -f "$RUNNER_TEMP/relevo/$f" ] || { echo "::error::The Relevo package $RELEVO_VERSION lacks $f"; exit 1; }
+          done
+          if result=$(node "$RUNNER_TEMP/relevo/scripts/toolchain-check.mjs" --platform "$PLATFORM" --plugin-root "$RUNNER_TEMP/relevo"); then
+            exit 0
+          fi
+          # No jq here: the tool that is missing may be jq itself, and the comment must still be posted.
+          missing=$(printf '%s' "$result" | node -e 'console.log(JSON.parse(require("fs").readFileSync(0, "utf8")).missing.join(", "))')
+          [ -n "$missing" ] || { echo "::error::The toolchain check failed: $result"; exit 1; }
+          title=$(gh issue view "$ISSUE" --json title --jq .title)
+          assignee=$(gh issue view "$ISSUE" --json assignees --jq '.assignees[0].login // empty')
+          body=$(ASSIGNEE="$assignee" TITLE="$title" TOOLS="$missing" node -e 'const e = process.env; console.log(JSON.stringify({assignee: e.ASSIGNEE, issue: e.ISSUE, title: e.TITLE, tools: e.TOOLS, platform: e.PLATFORM}))' \
+            | node "$RUNNER_TEMP/relevo/scripts/render-message.mjs" toolchain_missing --config relevo.yml)
+          gh issue edit "$ISSUE" --remove-label relevo:ready --remove-label relevo:queued --remove-label relevo:building --add-label relevo:qa-failed
+          gh issue comment "$ISSUE" --body "$body"
+          echo "::error::The runner has no $missing, so nothing was built"
+          exit 1
+
+      # One comment on the issue shows the phase, the tasks and the minutes of the run, and the Relevo scripts of this
+      # package edit it every 30 seconds from here, beside the agent, until the job ends. It lives outside the agent
+      # block on purpose: it serves any agent. Nothing is written in the workspace (the agent needs a clean tree): the
+      # state is under $RUNNER_TEMP, and RELEVO_PROGRESS_DIR tells the go skill where to announce its phase. The step
+      # never fails the job, and a package without the script simply shows no progress. --max-minutes is the
+      # timeout-minutes of this job plus a margin: the check ends by itself even if this job is cancelled.
+      - name: Start the progress report
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE: ${{ github.event.issue.number || inputs.issue }}
+          DECISION: ${{ needs.decide.outputs.decision_b64 }}
+        run: |
+          script="$RUNNER_TEMP/relevo/scripts/progress.mjs"
+          [ -f "$script" ] || exit 0
+          dir="$RUNNER_TEMP/relevo-progress"
+          rm -rf "$dir"
+          mkdir -p "$dir"
+          echo "RELEVO_PROGRESS_DIR=$dir" >> "$GITHUB_ENV"
+          RELEVO_PROGRESS_DIR="$dir" nohup node "$script" watch --issue "$ISSUE" --decision "$DECISION" --max-minutes 65 > "$dir/watch.log" 2>&1 &
+          exit 0
+
+      # relevo:agent-step begin
       - id: agent
         uses: anthropics/claude-code-action@v1
         env:
@@ -179,13 +262,9 @@ jobs:
           # The queue starts builds with `gh workflow run`, so the actor is the Actions bot and the action refuses
           # it unless it is allowed. Only this one bot: never '*', which would let outside apps start runs.
           allowed_bots: github-actions
-          # Plugin repository: choose ONE of the next two lines.
-          # a) Public repository (default):
-          plugin_marketplaces: https://github.com/elalfner/relevo.git
-          # b) Private repository: the runner cannot clone it without a credential. Store a read-only fine-grained
-          #    token as the secret RELEVO_PLUGIN_TOKEN and replace the line above with:
-          # plugin_marketplaces: https://x-access-token:${{ secrets.RELEVO_PLUGIN_TOKEN }}@github.com/elalfner/relevo.git
-          plugins: relevo@relevo
+          # The plugin is not installed from a marketplace: --plugin-dir in claude_args loads the package that the step
+          # "Check the toolchain" unpacked at RELEVO_VERSION, so one pin decides the scripts and the skills, nothing is
+          # cloned and no token is needed to read the plugin repository.
           # The issue text is data, never instructions: the skill tells the agent so. The tool list is closed:
           # only the tools in --allowedTools, and no web access (nothing to fetch, nowhere to send a secret).
           # Do not set allowed_non_write_users or show_full_output here, and never widen allowed_bots: they open the run to
@@ -196,8 +275,10 @@ jobs:
           claude_args: >-
             --max-turns 100
             --max-budget-usd 5
+            --plugin-dir ${{ runner.temp }}/relevo
             --allowedTools "Bash,Read,Write,Edit,Glob,Grep,Task"
             --disallowedTools "WebFetch,WebSearch,Bash(curl:*),Bash(wget:*)"
+      # relevo:agent-step end
 
       # The scripts of the next two steps come from the plugin package. It is unpacked into the workspace only now, after the agent has
       # finished, because the agent's preflight needs a clean working tree and a checkout inside it would not be.
@@ -206,7 +287,7 @@ jobs:
         continue-on-error: true
         run: |
           mkdir -p .relevo-plugin
-          npm pack "@elalfner/relevo@$RELEVO_VERSION" --silent --pack-destination "$RUNNER_TEMP" > /dev/null
+          npm pack "github:elalfner/relevo#d3bb60b38ddfc31c9d4b5477ab64a7ea37ccbf1c" --silent --pack-destination "$RUNNER_TEMP" > /dev/null
           tar -xzf "$RUNNER_TEMP"/elalfner-relevo-*.tgz --strip-components=1 -C .relevo-plugin
           for f in scripts/run-usage.mjs scripts/usage-limit.mjs; do
             [ -f ".relevo-plugin/$f" ] || { echo "::error::The Relevo package $RELEVO_VERSION lacks $f"; exit 1; }
@@ -236,6 +317,7 @@ jobs:
       # ready or building after the agent step, no outcome was recorded, so say so on the issue.
       # If you renamed the labels in relevo.yml, change the names below too.
       - name: Report a run that ended without an outcome
+        id: no_outcome
         if: always()
         env:
           GH_TOKEN: ${{ github.token }}
@@ -261,3 +343,37 @@ jobs:
           else
             gh issue comment "$ISSUE" --body "${assignee:+@$assignee }The run ended without a result (job status: $JOB_STATUS), so nothing was built or reported. Read the log to see why: $RUN_URL. When the cause is fixed, remove \`relevo:qa-failed\` and apply \`relevo:ready\` again."
           fi
+          echo "reported=true" >> "$GITHUB_OUTPUT"
+
+      # The progress report ends here, after every report above so that its last line is true: first the check is asked to
+      # stop and waited for (so that it cannot write over the closing), then the comment is replaced by one line. Neither
+      # step can fail the job, and neither does anything when the report never started.
+      - name: Stop the progress report
+        if: always()
+        continue-on-error: true
+        run: |
+          script="$RUNNER_TEMP/relevo/scripts/progress.mjs"
+          [ -f "$script" ] && [ -n "$RELEVO_PROGRESS_DIR" ] || exit 0
+          node "$script" stop --wait 20
+          exit 0
+
+      - name: Close the progress comment
+        if: always()
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE: ${{ github.event.issue.number || inputs.issue }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          NO_OUTCOME: ${{ steps.no_outcome.outputs.reported }}
+        run: |
+          script="$RUNNER_TEMP/relevo/scripts/progress.mjs"
+          [ -f "$script" ] && [ -n "$RELEVO_PROGRESS_DIR" ] || exit 0
+          outcome=result
+          [ "$NO_OUTCOME" = "true" ] && outcome=none
+          node "$script" close --issue "$ISSUE" --outcome "$outcome" --run-url "$RUN_URL"
+          exit 0
+
+      # A runner may keep its workspace between jobs (a self-hosted one does): remove what this job added to it.
+      - name: Remove what this job added
+        if: always()
+        run: rm -rf .relevo-plugin
