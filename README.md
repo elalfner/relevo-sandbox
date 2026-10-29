@@ -16,3 +16,4 @@ For help getting started with Flutter development, view the
 samples, guidance on mobile development, and a full API reference.
 
 This repository is a sandbox for testing Relevo.
+It tests the cloud build, the review and the ship by label.
