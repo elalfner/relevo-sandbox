@@ -88,7 +88,7 @@ jobs:
         run: |
           mkdir -p "$RUNNER_TEMP/relevo"
           # Sandbox test: relevo at commit 9a5716b of dev (0.11.1, not published yet) instead of the published package.
-          rm -rf "$RUNNER_TEMP/relevo-src" && git clone --quiet https://github.com/elalfner/relevo.git "$RUNNER_TEMP/relevo-src" && git -C "$RUNNER_TEMP/relevo-src" checkout --quiet 9a5716b && npm pack "$RUNNER_TEMP/relevo-src" --silent --pack-destination "$RUNNER_TEMP" > /dev/null
+          rm -rf "$RUNNER_TEMP/relevo-src" && git clone --quiet https://github.com/elalfner/relevo.git "$RUNNER_TEMP/relevo-src" && git -C "$RUNNER_TEMP/relevo-src" checkout --quiet 2da99a8 && npm pack "$RUNNER_TEMP/relevo-src" --silent --pack-destination "$RUNNER_TEMP" > /dev/null
           tar -xzf "$RUNNER_TEMP"/elalfner-relevo-*.tgz --strip-components=1 -C "$RUNNER_TEMP/relevo"
           for f in scripts/ship-unattended.mjs scripts/scan-diff.mjs scripts/check-archive.mjs scripts/stage.mjs scripts/fix-tasks.mjs scripts/conflict-scope.mjs scripts/render-message.mjs; do
             [ -f "$RUNNER_TEMP/relevo/$f" ] || { echo "::error::The Relevo package $RELEVO_VERSION lacks $f"; exit 1; }
