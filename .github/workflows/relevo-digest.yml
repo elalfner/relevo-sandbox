@@ -1,4 +1,4 @@
-# relevo-template: 0.11.1
+# relevo-template: 0.12.0
 # Relevo: posts one digest per working day, as a comment on the issue named by digest.issue in relevo.yml.
 # It lists who is waiting on what and the alerts, and posts nothing when nothing is waiting.
 # Subscribe your chat tool to that issue to receive it. Copy to .github/workflows/relevo-digest.yml.
@@ -14,7 +14,7 @@ name: relevo-digest
 # The version of @elalfner/relevo whose scripts this workflow runs. The plugin's templates carry the version they
 # were released with, and `/relevo:init` reports this file as different when it is older; change it by hand to update.
 env:
-  RELEVO_VERSION: '0.11.1'
+  RELEVO_VERSION: '0.12.0'
 
 on:
   schedule:
@@ -46,7 +46,7 @@ jobs:
         # script this job runs stops the run here, before anything is changed.
         run: |
           mkdir -p .relevo-plugin
-          rm -rf "$RUNNER_TEMP/relevo-src" && git clone --quiet https://github.com/elalfner/relevo.git "$RUNNER_TEMP/relevo-src" && git -C "$RUNNER_TEMP/relevo-src" checkout --quiet 2da99a8 && npm pack "$RUNNER_TEMP/relevo-src" --silent --pack-destination "$RUNNER_TEMP" > /dev/null
+          npm pack "@elalfner/relevo@$RELEVO_VERSION" --silent --pack-destination "$RUNNER_TEMP" > /dev/null
           tar -xzf "$RUNNER_TEMP"/elalfner-relevo-*.tgz --strip-components=1 -C .relevo-plugin
           for f in scripts/digest.mjs; do
             [ -f ".relevo-plugin/$f" ] || { echo "::error::The Relevo package $RELEVO_VERSION lacks $f"; exit 1; }
