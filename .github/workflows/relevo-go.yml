@@ -312,6 +312,9 @@ jobs:
           # The decision the `decide` job already made travels with the prompt, encoded so that the issue title in it
           # is never read as an instruction. The skill decodes it and skips its own planning step.
           prompt: /relevo:go ${{ github.event.issue.number || inputs.issue }} --decision ${{ needs.decide.outputs.decision_b64 }}
+          # TEST ONLY (restricted-files, task 8.4, round 3): print the tool calls and results in the log to see which tool was
+          # denied and why the agent stopped. The only secret in this run is a fake value. Remove after the test.
+          show_full_output: true
           # relevo:restricted begin
           # Files that no agent reads (docs/security.md): Read denials for the file tools, and the sandbox read denials, which apply
           # only where a person enables the sandbox: it is NOT enabled here. Written from the base list and `restricted_paths` of
