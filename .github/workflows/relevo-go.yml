@@ -260,20 +260,6 @@ jobs:
           [ "$code" -le 1 ] || exit "$code"
           echo "RELEVO_REFERENCES=$GITHUB_WORKSPACE/.relevo-design/manifest.json" >> "$GITHUB_ENV"
 
-      # TEST ONLY (restricted-files, task 8.4, round 2): the sandbox of Claude Code needs bubblewrap and socat on Linux
-      # (round 1 failed with "socat not installed"). The value of the user-namespace restriction is printed, and lifted
-      # only when it is on, so the log says whether it was needed.
-      - name: Install the sandbox dependencies
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq bubblewrap socat
-          v=$(sysctl -n kernel.apparmor_restrict_unprivileged_userns 2>/dev/null || echo absent)
-          echo "apparmor_restrict_unprivileged_userns=$v"
-          if [ "$v" = "1" ]; then
-            echo "::notice::user namespaces are restricted on this image: lifting the restriction for the test"
-            sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
-          fi
-
       # TEST ONLY (restricted-files, task 8.4): an untracked, git-ignored environment file with a fake value, so that the
       # agent has something to try to read. Remove with the rest of this test.
       - name: Plant a fake environment file
@@ -363,8 +349,6 @@ jobs:
                 ]
               },
               "sandbox": {
-                "enabled": true,
-                "failIfUnavailable": true,
                 "filesystem": {
                   "denyRead": [
                     "**/.env",
