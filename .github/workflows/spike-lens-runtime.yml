@@ -30,7 +30,9 @@ jobs:
           claude_args: --model haiku --max-turns 6 --max-budget-usd 0.30 --allowedTools "Task,Read"
       - name: Keep the S1 stream
         if: always()
-        run: cp "${{ steps.s1.outputs.execution_file }}" spike-s1.json || true
+        run: |
+          cp "${{ steps.s1.outputs.execution_file }}" spike-s1.json || true
+          echo '=== S1 STREAM BEGIN'; cat spike-s1.json || true; echo; echo '=== S1 STREAM END'
       - id: s3
         name: S3 a low turn limit with a subagent
         continue-on-error: true
@@ -44,7 +46,9 @@ jobs:
           claude_args: --model haiku --max-turns 2 --max-budget-usd 0.30 --allowedTools "Task,Read"
       - name: Keep the S3 stream
         if: always()
-        run: cp "${{ steps.s3.outputs.execution_file }}" spike-s3.json || true
+        run: |
+          cp "${{ steps.s3.outputs.execution_file }}" spike-s3.json || true
+          echo '=== S3 STREAM BEGIN'; cat spike-s3.json || true; echo; echo '=== S3 STREAM END'
       - uses: actions/upload-artifact@v4
         if: always()
         with:
