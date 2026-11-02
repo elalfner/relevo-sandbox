@@ -32,7 +32,13 @@ jobs:
         if: always()
         run: |
           cp "${{ steps.s1.outputs.execution_file }}" spike-s1.json || true
-          echo '=== S1 STREAM BEGIN'; cat spike-s1.json || true; echo; echo '=== S1 STREAM END'
+          echo '=== S1 DIGEST BEGIN'
+          jq -c '.[] | select(.type=="assistant") | .message.content[]? | select(.type=="tool_use") | {name,input}' spike-s1.json || true
+          jq -c '.[] | select(.tool_use_result?) | .tool_use_result | {agentType,resolvedModel,totalTokens}' spike-s1.json || true
+          jq -c '.[] | select(.type=="system" and .subtype=="init") | {tools}' spike-s1.json | head -c 1500 || true
+          jq -c '[.. | objects | to_entries[] | select(.key|test("effort";"i")) | {(.key): .value}] | unique' spike-s1.json | head -c 1500 || true
+          jq -c '.[] | select(.type=="result") | {num_turns,subtype,terminal_reason,total_cost_usd,subagent_stats}' spike-s1.json || true
+          echo '=== S1 DIGEST END'
       - id: s3
         name: S3 a low turn limit with a subagent
         continue-on-error: true
@@ -48,7 +54,32 @@ jobs:
         if: always()
         run: |
           cp "${{ steps.s3.outputs.execution_file }}" spike-s3.json || true
-          echo '=== S3 STREAM BEGIN'; cat spike-s3.json || true; echo; echo '=== S3 STREAM END'
+          echo '=== S3 DIGEST BEGIN'
+          jq -c '.[] | select(.type=="result") | {num_turns,subtype,terminal_reason,total_cost_usd,subagent_stats}' spike-s3.json || true
+          echo '=== S3 DIGEST END'
+      - name: Write a subagent that needs several turns
+        run: |
+          for f in a b c; do echo "$f" > "$f.txt"; done
+          printf '%s\n' '---' 'name: reader' 'description: Spike reader. Reads a.txt, b.txt and c.txt one call at a time.' 'model: haiku' 'tools: Read' '---' 'Read a.txt, then b.txt, then c.txt. Make exactly one Read call per turn, never several at once. Then answer DONE.' > .claude/agents/reader.md
+      - id: s3b
+        name: S3b a low turn limit with a subagent that takes several turns
+        continue-on-error: true
+        uses: anthropics/claude-code-action@v1
+        env:
+          CLAUDE_CODE_DISABLE_BACKGROUND_TASKS: '1'
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ github.token }}
+          prompt: Launch the subagent 'reader' with the Agent tool and report its answer.
+          claude_args: --model haiku --max-turns 2 --max-budget-usd 0.30 --allowedTools "Task,Read"
+      - name: Digest of S3b
+        if: always()
+        run: |
+          cp "${{ steps.s3b.outputs.execution_file }}" spike-s3b.json || true
+          echo '=== S3B DIGEST BEGIN'
+          jq -c '.[] | select(.type=="result") | {num_turns,subtype,terminal_reason,total_cost_usd,subagent_stats,usage}' spike-s3b.json || true
+          jq -c '.[] | select(.type=="system" and .subtype=="task_notification") | {status,summary,usage}' spike-s3b.json || true
+          echo '=== S3B DIGEST END'
       - uses: actions/upload-artifact@v4
         if: always()
         with:
