@@ -3,10 +3,48 @@
 name: spike-lens-runtime
 on:
   workflow_dispatch:
+    inputs:
+      what:
+        description: spikes or eval
+        default: spikes
+      lens:
+        description: lenses for the evaluation (comma separated)
+        default: code,security
+      cases:
+        description: regex over the case ids
+        default: state-update|unescaped|table-without
+      budget:
+        description: USD cap of each model call in the evaluation
+        default: '0.25'
 permissions:
   contents: read
 jobs:
+  eval:
+    if: ${{ inputs.what == 'eval' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: elalfner/relevo
+          ref: plan/specialist-review-lenses
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install -g @anthropic-ai/claude-code
+      - name: Evaluate the lenses on the seeded defects
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          node scripts/eval-lenses.mjs --yes --lens "${{ inputs.lens }}" --cases "${{ inputs.cases }}" --max-budget-usd "${{ inputs.budget }}" --out "$RUNNER_TEMP/eval"
+          echo '=== REPORT BEGIN'; cat "$RUNNER_TEMP"/eval/*.md; echo '=== REPORT END'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lens-evaluation
+          path: ${{ runner.temp }}/eval
   spikes:
+    if: ${{ inputs.what != 'eval' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
