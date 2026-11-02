@@ -1,10 +1,8 @@
 # Throwaway spikes S1 and S3 of the Relevo change "specialist-review-lenses". Delete this branch afterwards.
-# It runs only when the file spike/RUN changes on this branch, so pushing the workflow alone spends nothing.
+# It runs only when it is dispatched by hand, so pushing the workflow alone spends nothing.
 name: spike-lens-runtime
 on:
-  push:
-    branches: [spike/lens-runtime]
-    paths: [spike/RUN]
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
