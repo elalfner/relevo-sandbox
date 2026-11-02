@@ -1,0 +1,54 @@
+# Throwaway spikes S1 and S3 of the Relevo change "specialist-review-lenses". Delete this branch afterwards.
+# It runs only when the file spike/RUN changes on this branch, so pushing the workflow alone spends nothing.
+name: spike-lens-runtime
+on:
+  push:
+    branches: [spike/lens-runtime]
+    paths: [spike/RUN]
+permissions:
+  contents: read
+jobs:
+  spikes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Write the probe subagent
+        run: |
+          mkdir -p .claude/agents
+          printf '%s\n' '---' 'name: probe' 'description: Spike probe. Answers with the word PROBE and nothing else.' 'model: haiku' 'effort: low' 'tools: Read' '---' 'Answer with the single word PROBE.' > .claude/agents/probe.md
+      - id: s1
+        name: S1 effort at launch versus in the frontmatter
+        uses: anthropics/claude-code-action@v1
+        env:
+          CLAUDE_CODE_DISABLE_BACKGROUND_TASKS: '1'
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ github.token }}
+          prompt: >-
+            Launch the subagent 'probe' twice with the Agent tool. First normally. Second passing model=haiku and,
+            if the tool accepts it, an effort parameter set to high. Report which parameters the Agent tool accepted,
+            quoting any error.
+          claude_args: --model haiku --max-turns 6 --max-budget-usd 0.30 --allowedTools "Task,Read"
+      - name: Keep the S1 stream
+        if: always()
+        run: cp "${{ steps.s1.outputs.execution_file }}" spike-s1.json || true
+      - id: s3
+        name: S3 a low turn limit with a subagent
+        continue-on-error: true
+        uses: anthropics/claude-code-action@v1
+        env:
+          CLAUDE_CODE_DISABLE_BACKGROUND_TASKS: '1'
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ github.token }}
+          prompt: Launch the subagent 'probe' with the Agent tool and report its answer.
+          claude_args: --model haiku --max-turns 2 --max-budget-usd 0.30 --allowedTools "Task,Read"
+      - name: Keep the S3 stream
+        if: always()
+        run: cp "${{ steps.s3.outputs.execution_file }}" spike-s3.json || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: spike-streams
+          path: spike-s*.json
