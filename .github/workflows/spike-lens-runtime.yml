@@ -19,6 +19,43 @@ on:
 permissions:
   contents: read
 jobs:
+  effort:
+    if: ${{ inputs.what == 'effort' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Write three versions of the same subagent
+        run: |
+          mkdir -p .claude/agents
+          body='Solve the task you are given, show your reasoning briefly, and end with the line ANSWER: <number>.'
+          printf '%s\n' '---' 'name: think' 'description: Reasoning probe without an effort in its file.' 'model: sonnet' 'tools: Read' '---' "$body" > .claude/agents/think.md
+          printf '%s\n' '---' 'name: think-low' 'description: Reasoning probe whose file says effort low.' 'model: sonnet' 'effort: low' 'tools: Read' '---' "$body" > .claude/agents/think-low.md
+          printf '%s\n' '---' 'name: think-max' 'description: Reasoning probe whose file says effort max.' 'model: sonnet' 'effort: max' 'tools: Read' '---' "$body" > .claude/agents/think-max.md
+      - id: e1
+        name: Launch the same task with different efforts
+        uses: anthropics/claude-code-action@v1
+        env:
+          CLAUDE_CODE_DISABLE_BACKGROUND_TASKS: '1'
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ github.token }}
+          prompt: >-
+            Use the Agent tool, one call at a time and in this order, ten calls in all. The task for every call is
+            exactly: "How many distinct ways are there to tile a 2 by 9 board with 1 by 2 dominoes, and how many of
+            them have no two dominoes forming a 2 by 2 square? Give both numbers." Calls 1 and 2: subagent_type think,
+            effort low. Calls 3 and 4: subagent_type think, effort max. Calls 5 and 6: subagent_type think, no effort
+            parameter. Calls 7 and 8: subagent_type think-low, no effort parameter. Calls 9 and 10: subagent_type
+            think-max, no effort parameter. After the ten calls, say only DONE.
+          claude_args: --model haiku --max-turns 30 --max-budget-usd 1 --allowedTools "Task,Read"
+      - name: Digest of the effort probe
+        if: always()
+        run: |
+          cp "${{ steps.e1.outputs.execution_file }}" spike-e1.json || true
+          echo '=== EFFORT DIGEST BEGIN'
+          jq -c '(map(select(.type=="assistant")|.message.content[]?|select(.type=="tool_use" and .name=="Agent")|{(.id):.input})|add) as $in | .[] | select(.tool_use_result?.agentType?) | (.message.content[0].tool_use_id) as $id | {agent:.tool_use_result.agentType, effort_in:($in[$id].effort), model_in:($in[$id].model), thinking:.tool_use_result.usage.output_tokens_details.thinking_tokens, out:.tool_use_result.usage.output_tokens, total:.tool_use_result.totalTokens, ms:.tool_use_result.totalDurationMs}' spike-e1.json || true
+          jq -c '.[] | select(.type=="result") | {num_turns,subtype,terminal_reason,total_cost_usd}' spike-e1.json || true
+          echo '=== EFFORT DIGEST END'
   eval:
     if: ${{ inputs.what == 'eval' }}
     runs-on: ubuntu-latest
@@ -44,7 +81,7 @@ jobs:
           name: lens-evaluation
           path: ${{ runner.temp }}/eval
   spikes:
-    if: ${{ inputs.what != 'eval' }}
+    if: ${{ inputs.what != 'eval' && inputs.what != 'effort' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
