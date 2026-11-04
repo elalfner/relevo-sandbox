@@ -1,18 +1,4 @@
 {
-  "extraKnownMarketplaces": {
-    "relevo": {
-      "source": {
-        "source": "github",
-        "repo": "elalfner/relevo",
-        "sparsePaths": [
-          ".claude-plugin"
-        ]
-      }
-    }
-  },
-  "enabledPlugins": {
-    "relevo@relevo": true
-  },
   "hooks": {
     "SessionStart": [
       {
@@ -24,5 +10,19 @@
         ]
       }
     ]
+  },
+  "enabledPlugins": {
+    "relevo@relevo": true
+  },
+  "extraKnownMarketplaces": {
+    "relevo": {
+      "source": {
+        "source": "github",
+        "repo": "elalfner/relevo",
+        "sparsePaths": [
+          ".claude-plugin"
+        ]
+      }
+    }
   }
 }
