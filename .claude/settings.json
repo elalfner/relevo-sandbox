@@ -19,7 +19,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "[ \"$CLAUDE_CODE_REMOTE\" = \"true\" ] && { claude plugin marketplace add elalfner/relevo --sparse .claude-plugin --scope project && claude plugin install relevo@relevo --scope project; } >/tmp/relevo-plugin-hook.log 2>&1 || true"
+            "command": "[ \"$CLAUDE_CODE_REMOTE\" = \"true\" ] && { claude plugin marketplace add elalfner/relevo --sparse .claude-plugin --scope local && claude plugin install relevo@relevo --scope local; } >/tmp/relevo-plugin-hook.log 2>&1 || true"
           }
         ]
       }
