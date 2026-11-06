@@ -2,7 +2,7 @@
 
 ## 1. Reset history state
 
-- [ ] 1.1 In `lib/main.dart`, keep the history list in the home state; `_resetCounter` adds the previous value at the top only when it is not 0 and keeps at most 20. Verify with widget tests: reset adds the value, reset at 0 adds nothing, the 21st reset drops the oldest, repeated values give separate rows.
+- [x] 1.1 In `lib/main.dart`, keep the history list in the home state; `_resetCounter` adds the previous value at the top only when it is not 0 and keeps at most 20. Verify with widget tests: reset adds the value, reset at 0 adds nothing, the 21st reset drops the oldest, repeated values give separate rows.
 
 ## 2. History screen
 

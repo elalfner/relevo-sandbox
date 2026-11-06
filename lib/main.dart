@@ -3,6 +3,9 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 const String appVersion = 'v1.0.0';
 
+/// Most values the Reset history keeps.
+const int resetHistoryLimit = 20;
+
 void main() {
   runApp(const MyApp());
 }
@@ -70,8 +73,16 @@ String greetingForHour(int hour) {
   return 'Good evening';
 }
 
+/// Returns the Reset history after a Reset at [counter]: [counter] goes first
+/// unless it is 0, and at most [resetHistoryLimit] values are kept.
+List<int> historyAfterReset(List<int> history, int counter) {
+  if (counter == 0) return history;
+  return [counter, ...history].take(resetHistoryLimit).toList();
+}
+
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
+  List<int> _resetHistory = const [];
   late final String _greeting;
   String? _buildNumber;
 
@@ -106,7 +117,10 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _resetCounter() {
-    setState(() => _counter = 0);
+    setState(() {
+      _resetHistory = historyAfterReset(_resetHistory, _counter);
+      _counter = 0;
+    });
   }
 
   @override
