@@ -2,8 +2,8 @@
 
 ## 1. Dialog widget
 
-- [ ] 1.1 Create `ResetConfirmDialog` in `lib/widgets/reset_confirm_dialog.dart` with constants for the question and the Cancel/Confirm labels, semantics labels on both buttons, taking the count and returning whether the person confirmed; verify with `flutter analyze`
-- [ ] 1.2 Add `test/widgets/reset_confirm_dialog_test.dart` covering the count in the question and the two buttons; verify the test passes
+- [x] 1.1 Create `ResetConfirmDialog` in `lib/widgets/reset_confirm_dialog.dart` with constants for the question and the Cancel/Confirm labels, semantics labels on both buttons, taking the count and returning whether the person confirmed; verify with `flutter analyze`
+- [x] 1.2 Add `test/widgets/reset_confirm_dialog_test.dart` covering the count in the question and the two buttons; verify the test passes
 
 ## 2. Home screen
 
