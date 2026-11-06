@@ -71,7 +71,7 @@ jobs:
         # script this job runs stops the run here, before anything is changed.
         run: |
           mkdir -p .relevo-plugin
-          rm -rf "$RUNNER_TEMP/relevo-src" && git clone --quiet https://github.com/elalfner/relevo.git "$RUNNER_TEMP/relevo-src" && git -C "$RUNNER_TEMP/relevo-src" checkout --quiet 2a2c766 && npm pack "$RUNNER_TEMP/relevo-src" --silent --pack-destination "$RUNNER_TEMP" > /dev/null
+          rm -rf "$RUNNER_TEMP/relevo-src" && git clone --quiet https://github.com/elalfner/relevo.git "$RUNNER_TEMP/relevo-src" && git -C "$RUNNER_TEMP/relevo-src" checkout --quiet a5650d5 && npm pack "$RUNNER_TEMP/relevo-src" --silent --pack-destination "$RUNNER_TEMP" > /dev/null
           tar -xzf "$RUNNER_TEMP"/elalfner-relevo-*.tgz --strip-components=1 -C .relevo-plugin
           for f in scripts/go-plan.mjs; do
             [ -f ".relevo-plugin/$f" ] || { echo "::error::The Relevo package $RELEVO_VERSION lacks $f"; exit 1; }
@@ -212,7 +212,7 @@ jobs:
           PLATFORM: ${{ needs.decide.outputs.platform }}
         run: |
           mkdir -p "$RUNNER_TEMP/relevo"
-          rm -rf "$RUNNER_TEMP/relevo-src" && git clone --quiet https://github.com/elalfner/relevo.git "$RUNNER_TEMP/relevo-src" && git -C "$RUNNER_TEMP/relevo-src" checkout --quiet 2a2c766 && npm pack "$RUNNER_TEMP/relevo-src" --silent --pack-destination "$RUNNER_TEMP" > /dev/null
+          rm -rf "$RUNNER_TEMP/relevo-src" && git clone --quiet https://github.com/elalfner/relevo.git "$RUNNER_TEMP/relevo-src" && git -C "$RUNNER_TEMP/relevo-src" checkout --quiet a5650d5 && npm pack "$RUNNER_TEMP/relevo-src" --silent --pack-destination "$RUNNER_TEMP" > /dev/null
           tar -xzf "$RUNNER_TEMP"/elalfner-relevo-*.tgz --strip-components=1 -C "$RUNNER_TEMP/relevo"
           for f in scripts/toolchain-check.mjs scripts/render-message.mjs scripts/design-fetch.mjs .claude-plugin/plugin.json; do
             [ -f "$RUNNER_TEMP/relevo/$f" ] || { echo "::error::The Relevo package $RELEVO_VERSION lacks $f"; exit 1; }
@@ -281,6 +281,17 @@ jobs:
           node "$RUNNER_TEMP/relevo/scripts/design-fetch.mjs" --issue "$ISSUE" --repo "$GITHUB_REPOSITORY" || code=$?
           [ "$code" -le 1 ] || exit "$code"
           echo "RELEVO_REFERENCES=$GITHUB_WORKSPACE/.relevo-design/manifest.json" >> "$GITHUB_ENV"
+
+      # The install step above can rewrite a lockfile (`flutter pub get`, `npm ci`). Record which files already differ from
+      # the commit before the agent starts, so that the rescue and the checkpoints do not take them for the agent's work:
+      # the safe commit would refuse a dependency file the issue did not list, and the whole commit with it. A file the
+      # agent changes afterwards is still judged like any change. It never fails the job.
+      - name: Record the state of the working tree before the agent
+        continue-on-error: true
+        run: |
+          script="$RUNNER_TEMP/relevo/scripts/tree-baseline.mjs"
+          [ -f "$script" ] && [ -n "$RELEVO_PROGRESS_DIR" ] || exit 0
+          node "$script" record || true
 
       # What the build cannot go on without is checked here, with no model, before the agent starts: a reference that the
       # fetcher refused, and the inputs that the issue declares in its External inputs section. When something is
@@ -352,6 +363,7 @@ jobs:
           # The queue starts builds with `gh workflow run`, so the actor is the Actions bot and the action refuses
           # it unless it is allowed. Only this one bot: never '*', which would let outside apps start runs.
           allowed_bots: github-actions
+          show_full_output: true   # TEST ONLY: to see what the agent did; remove after the test
           # The plugin is not installed from a marketplace: --plugin-dir in claude_args loads the package that the step
           # "Check the toolchain" unpacked at RELEVO_VERSION, so one pin decides the scripts and the skills, nothing is
           # cloned and no token is needed to read the plugin repository.
@@ -467,9 +479,9 @@ jobs:
         continue-on-error: true
         run: |
           mkdir -p .relevo-plugin
-          rm -rf "$RUNNER_TEMP/relevo-src" && git clone --quiet https://github.com/elalfner/relevo.git "$RUNNER_TEMP/relevo-src" && git -C "$RUNNER_TEMP/relevo-src" checkout --quiet 2a2c766 && npm pack "$RUNNER_TEMP/relevo-src" --silent --pack-destination "$RUNNER_TEMP" > /dev/null
+          rm -rf "$RUNNER_TEMP/relevo-src" && git clone --quiet https://github.com/elalfner/relevo.git "$RUNNER_TEMP/relevo-src" && git -C "$RUNNER_TEMP/relevo-src" checkout --quiet a5650d5 && npm pack "$RUNNER_TEMP/relevo-src" --silent --pack-destination "$RUNNER_TEMP" > /dev/null
           tar -xzf "$RUNNER_TEMP"/elalfner-relevo-*.tgz --strip-components=1 -C .relevo-plugin
-          for f in scripts/run-usage.mjs scripts/usage-limit.mjs scripts/run-cut.mjs scripts/rescue-work.mjs scripts/progress.mjs; do
+          for f in scripts/run-usage.mjs scripts/usage-limit.mjs scripts/run-cut.mjs scripts/rescue-work.mjs scripts/progress.mjs scripts/tree-baseline.mjs; do
             [ -f ".relevo-plugin/$f" ] || { echo "::error::The Relevo package $RELEVO_VERSION lacks $f"; exit 1; }
           done
 
