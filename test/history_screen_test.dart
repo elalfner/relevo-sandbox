@@ -1,3 +1,5 @@
+import 'dart:ui' show SemanticsAction;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -47,7 +49,12 @@ void main() {
         findsOneWidget,
       );
       expect(find.byTooltip('History'), findsOneWidget);
-      expect(find.bySemanticsLabel('History'), findsOneWidget);
+      final handle = tester.ensureSemantics();
+      final data = tester.getSemantics(historyButton).getSemanticsData();
+      expect(data.tooltip, 'History');
+      expect(data.flagsCollection.isButton, isTrue);
+      expect(data.hasAction(SemanticsAction.tap), isTrue);
+      handle.dispose();
       final size = tester.getSize(historyButton);
       expect(size.width, greaterThanOrEqualTo(48));
       expect(size.height, greaterThanOrEqualTo(48));

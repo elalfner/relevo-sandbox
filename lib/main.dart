@@ -153,16 +153,12 @@ class _MyHomePageState extends State<MyHomePage> {
         // change color while the other colors stay the same.
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
-          Semantics(
-            label: 'History',
-            excludeSemantics: true,
-            child: IconButton(
-              key: const Key('history-button'),
-              onPressed: _openHistory,
-              tooltip: 'History',
-              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-              icon: const Icon(Icons.history),
-            ),
+          IconButton(
+            key: const Key('history-button'),
+            onPressed: _openHistory,
+            tooltip: 'History',
+            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+            icon: const Icon(Icons.history),
           ),
         ],
         // Here we take the value from the MyHomePage object that was created by
