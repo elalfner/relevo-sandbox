@@ -31,7 +31,6 @@ limits:
   review_sla_hours: 8              # reminder, then escalation after the same time again
   run_max_turns: 100               # per unattended run
   run_max_cost: 5                  # REQUIRED: US dollars per unattended run; choose your own
-  run_max_minutes: 5               # TEST: forces a cut of the run so the rescue can be seen
 
 qa:
   retries: 1                       # developer attempts after QA rejects

@@ -363,7 +363,6 @@ jobs:
           # The queue starts builds with `gh workflow run`, so the actor is the Actions bot and the action refuses
           # it unless it is allowed. Only this one bot: never '*', which would let outside apps start runs.
           allowed_bots: github-actions
-          show_full_output: true   # TEST ONLY: to see what the agent did; remove after the test
           # The plugin is not installed from a marketplace: --plugin-dir in claude_args loads the package that the step
           # "Check the toolchain" unpacked at RELEVO_VERSION, so one pin decides the scripts and the skills, nothing is
           # cloned and no token is needed to read the plugin repository.
