@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import 'screens/history_screen.dart';
+
 const String appVersion = 'v1.0.0';
 
 /// Most values the Reset history keeps.
@@ -123,6 +125,19 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  void _clearHistory() {
+    setState(() => _resetHistory = const []);
+  }
+
+  void _openHistory() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) =>
+            HistoryScreen(history: _resetHistory, onClear: _clearHistory),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
@@ -137,6 +152,19 @@ class _MyHomePageState extends State<MyHomePage> {
         // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
         // change color while the other colors stay the same.
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        actions: [
+          Semantics(
+            label: 'History',
+            excludeSemantics: true,
+            child: IconButton(
+              key: const Key('history-button'),
+              onPressed: _openHistory,
+              tooltip: 'History',
+              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+              icon: const Icon(Icons.history),
+            ),
+          ),
+        ],
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
         title: Column(
