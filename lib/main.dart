@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import 'package:relevo_sandbox/widgets/reset_confirm_dialog.dart';
+
 const String appVersion = 'v1.0.0';
 
 void main() {
@@ -70,6 +72,9 @@ String greetingForHour(int hour) {
   return 'Good evening';
 }
 
+/// The counter value from which Reset asks for confirmation.
+const int _confirmResetFrom = 10;
+
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
   late final String _greeting;
@@ -107,6 +112,18 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _resetCounter() {
     setState(() => _counter = 0);
+  }
+
+  /// Resets at once below [_confirmResetFrom]; at that value or more the
+  /// person must confirm in the dialog first.
+  Future<void> _onResetPressed() async {
+    if (_counter < _confirmResetFrom) {
+      _resetCounter();
+      return;
+    }
+    final confirmed = await ResetConfirmDialog.show(context, count: _counter);
+    if (!mounted || !confirmed) return;
+    _resetCounter();
   }
 
   @override
@@ -198,7 +215,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               TextButton(
                 key: const Key('reset-button'),
-                onPressed: _resetCounter,
+                onPressed: _onResetPressed,
                 child: const Text('Reset'),
               ),
             ],

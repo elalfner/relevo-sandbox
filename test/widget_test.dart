@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:relevo_sandbox/main.dart';
+import 'package:relevo_sandbox/widgets/reset_confirm_dialog.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
@@ -33,6 +34,16 @@ void main() {
       await tester.tap(find.byIcon(Icons.add));
     }
     await tester.pump();
+  }
+
+  Future<void> tapReset(WidgetTester tester) async {
+    await tester.tap(find.byKey(const Key('reset-button')));
+    await tester.pumpAndSettle();
+  }
+
+  Future<void> tapDialogButton(WidgetTester tester, String label) async {
+    await tester.tap(find.widgetWithText(TextButton, label));
+    await tester.pumpAndSettle();
   }
 
   testWidgets('Reset sets a non-zero counter to 0', (tester) async {
@@ -62,11 +73,103 @@ void main() {
     await tapAdd(tester, 1001);
     expect(find.text('1001'), findsOneWidget);
 
-    await tester.tap(find.byKey(const Key('reset-button')));
-    await tester.pump();
+    await tapReset(tester);
+    expect(find.text(ResetConfirmDialog.questionFor(1001)), findsOneWidget);
+    await tapDialogButton(tester, ResetConfirmDialog.confirmLabel);
 
     expect(find.text('0'), findsOneWidget);
     expect(find.text('1001'), findsNothing);
+  });
+
+  testWidgets('Reset at 12 asks to confirm and keeps the counter', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+    await tapAdd(tester, 12);
+
+    await tapReset(tester);
+
+    expect(find.text('Reset the counter of 12?'), findsOneWidget);
+    expect(
+      find.widgetWithText(TextButton, ResetConfirmDialog.cancelLabel),
+      findsOneWidget,
+    );
+    expect(
+      find.widgetWithText(TextButton, ResetConfirmDialog.confirmLabel),
+      findsOneWidget,
+    );
+    expect(find.text('12'), findsOneWidget);
+  });
+
+  testWidgets('Confirm in the dialog resets a counter of 12 to 0', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+    await tapAdd(tester, 12);
+    await tapReset(tester);
+
+    await tapDialogButton(tester, ResetConfirmDialog.confirmLabel);
+
+    expect(find.byType(AlertDialog), findsNothing);
+    expect(find.text('0'), findsOneWidget);
+    expect(find.text('12'), findsNothing);
+  });
+
+  testWidgets('Cancel in the dialog keeps a counter of 12', (tester) async {
+    await tester.pumpWidget(const MyApp());
+    await tapAdd(tester, 12);
+    await tapReset(tester);
+
+    await tapDialogButton(tester, ResetConfirmDialog.cancelLabel);
+
+    expect(find.byType(AlertDialog), findsNothing);
+    expect(find.text('12'), findsOneWidget);
+  });
+
+  testWidgets('Back button in the dialog keeps a counter of 12', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+    await tapAdd(tester, 12);
+    await tapReset(tester);
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AlertDialog), findsNothing);
+    expect(find.text('12'), findsOneWidget);
+  });
+
+  testWidgets('Reset at 9 resets at once without a dialog', (tester) async {
+    await tester.pumpWidget(const MyApp());
+    await tapAdd(tester, 9);
+
+    await tapReset(tester);
+
+    expect(find.byType(AlertDialog), findsNothing);
+    expect(find.text('0'), findsOneWidget);
+    expect(find.text('9'), findsNothing);
+  });
+
+  testWidgets('Reset at exactly 10 opens the dialog naming 10', (tester) async {
+    await tester.pumpWidget(const MyApp());
+    await tapAdd(tester, 10);
+
+    await tapReset(tester);
+
+    expect(find.text(ResetConfirmDialog.questionFor(10)), findsOneWidget);
+    expect(find.text('10'), findsOneWidget);
+  });
+
+  testWidgets('Reset at 100 names the whole number in the dialog', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+    await tapAdd(tester, 100);
+
+    await tapReset(tester);
+
+    expect(find.text(ResetConfirmDialog.questionFor(100)), findsOneWidget);
   });
 
   testWidgets('Parity text says Even at 0', (tester) async {
