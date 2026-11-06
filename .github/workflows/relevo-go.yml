@@ -188,6 +188,9 @@ jobs:
       #   - if: needs.decide.outputs.stack == 'laravel'
       #     working-directory: ${{ needs.decide.outputs.path }}
       #     run: composer install --no-scripts --no-interaction
+      - if: needs.decide.outputs.stack == 'flutter'
+        working-directory: ${{ needs.decide.outputs.path }}
+        run: flutter pub get
 
       - name: Install OpenSpec
         # Under the temporary folder of the job, at the pinned version: nothing global is left on a runner that persists.
