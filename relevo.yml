@@ -46,3 +46,8 @@ trust: private-team                # private-team | public
 # labels:
 #   ready: relevo:ready
 #   built: relevo:built
+
+# TEST of the retry model (model-escalation): the developer picks its model per issue and goes one name up on a retry.
+agents:
+  dev:
+    model: auto
