@@ -36,7 +36,7 @@ void main() {
     await pumpHost(tester, count: 12, onResult: (_) {});
 
     expect(find.byType(AlertDialog), findsOneWidget);
-    expect(find.text('Reset the counter of 12?'), findsOneWidget);
+    expect(find.text(ResetConfirmDialog.questionFor(12)), findsOneWidget);
     expect(find.text(ResetConfirmDialog.cancelLabel), findsOneWidget);
     expect(find.text(ResetConfirmDialog.confirmLabel), findsOneWidget);
     expect(
@@ -52,7 +52,7 @@ void main() {
   testWidgets('Question names a large count in full', (tester) async {
     await pumpHost(tester, count: 1001, onResult: (_) {});
 
-    expect(find.text('Reset the counter of 1001?'), findsOneWidget);
+    expect(find.text(ResetConfirmDialog.questionFor(1001)), findsOneWidget);
   });
 
   testWidgets('Confirm closes the dialog and reports true', (tester) async {

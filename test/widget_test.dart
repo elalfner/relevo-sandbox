@@ -89,7 +89,7 @@ void main() {
 
     await tapReset(tester);
 
-    expect(find.text('Reset the counter of 12?'), findsOneWidget);
+    expect(find.text(ResetConfirmDialog.questionFor(12)), findsOneWidget);
     expect(
       find.widgetWithText(TextButton, ResetConfirmDialog.cancelLabel),
       findsOneWidget,
