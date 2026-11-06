@@ -47,6 +47,60 @@ void main() {
     expect(find.text('5'), findsNothing);
   });
 
+  /// The weight the theme gives the counter's text style.
+  FontWeight? themeWeight(WidgetTester tester, String number) {
+    return Theme.of(
+      tester.element(find.text(number)),
+    ).textTheme.headlineMedium?.fontWeight;
+  }
+
+  /// The weight the counter number is drawn with: its own weight if it sets
+  /// one, otherwise the weight inherited from the theme.
+  FontWeight? counterWeight(WidgetTester tester, String number) {
+    final text = tester.widget<Text>(find.text(number));
+    return text.style?.fontWeight ?? themeWeight(tester, number);
+  }
+
+  testWidgets('Counter is in normal weight at 9', (tester) async {
+    await tester.pumpWidget(const MyApp());
+    await tapAdd(tester, 9);
+
+    expect(find.text('9'), findsOneWidget);
+    expect(counterWeight(tester, '9'), themeWeight(tester, '9'));
+    expect(counterWeight(tester, '9'), isNot(FontWeight.bold));
+  });
+
+  testWidgets('Counter is in bold at 10', (tester) async {
+    await tester.pumpWidget(const MyApp());
+    await tapAdd(tester, 10);
+
+    expect(find.text('10'), findsOneWidget);
+    expect(counterWeight(tester, '10'), FontWeight.bold);
+  });
+
+  testWidgets('Counter stays in bold at 100', (tester) async {
+    await tester.pumpWidget(const MyApp());
+    await tapAdd(tester, 100);
+
+    expect(find.text('100'), findsOneWidget);
+    expect(counterWeight(tester, '100'), FontWeight.bold);
+  });
+
+  testWidgets('Reset brings a bold counter back to normal weight', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+    await tapAdd(tester, 12);
+    expect(counterWeight(tester, '12'), FontWeight.bold);
+
+    await tester.tap(find.byKey(const Key('reset-button')));
+    await tester.pump();
+
+    expect(find.text('0'), findsOneWidget);
+    expect(counterWeight(tester, '0'), themeWeight(tester, '0'));
+    expect(counterWeight(tester, '0'), isNot(FontWeight.bold));
+  });
+
   testWidgets('Reset keeps a zero counter at 0', (tester) async {
     await tester.pumpWidget(const MyApp());
     expect(find.text('Reset'), findsOneWidget);

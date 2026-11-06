@@ -188,7 +188,10 @@ class _MyHomePageState extends State<MyHomePage> {
               const Text('You have pushed the button this many times:'),
               Text(
                 '$_counter',
-                style: Theme.of(context).textTheme.headlineMedium,
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  // Bold from 10 on; null keeps the theme's own weight below 10.
+                  fontWeight: _counter >= 10 ? FontWeight.bold : null,
+                ),
               ),
               if (_counter == 31)
                 const Text('Thirty-one!', key: Key('thirty-one-text')),
