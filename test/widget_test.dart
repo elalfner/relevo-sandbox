@@ -57,6 +57,55 @@ void main() {
     expect(find.text('0'), findsOneWidget);
   });
 
+  bool resetEnabled(WidgetTester tester) =>
+      tester.widget<TextButton>(find.byKey(const Key('reset-button'))).enabled;
+
+  testWidgets('Reset is disabled at start and stays on the screen', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+
+    expect(find.byKey(const Key('reset-button')), findsOneWidget);
+    expect(resetEnabled(tester), isFalse);
+  });
+
+  testWidgets('Reset is enabled after one tap on add', (tester) async {
+    await tester.pumpWidget(const MyApp());
+    await tapAdd(tester, 1);
+
+    expect(find.text('1'), findsOneWidget);
+    expect(resetEnabled(tester), isTrue);
+  });
+
+  testWidgets('Reset is disabled again after Reset from 5', (tester) async {
+    await tester.pumpWidget(const MyApp());
+    await tapAdd(tester, 5);
+    expect(resetEnabled(tester), isTrue);
+
+    await tester.tap(find.byKey(const Key('reset-button')));
+    await tester.pump();
+
+    expect(find.text('0'), findsOneWidget);
+    expect(resetEnabled(tester), isFalse);
+  });
+
+  testWidgets('Tapping the disabled Reset at 0 changes nothing', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+
+    await tester.tap(
+      find.byKey(const Key('reset-button')),
+      warnIfMissed: false,
+    );
+    await tester.pump();
+
+    expect(find.text('0'), findsOneWidget);
+    expect(find.text('Even'), findsOneWidget);
+    expect(resetEnabled(tester), isFalse);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('Reset sets a counter over 1000 to 0', (tester) async {
     await tester.pumpWidget(const MyApp());
     await tapAdd(tester, 1001);

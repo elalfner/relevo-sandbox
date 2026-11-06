@@ -198,7 +198,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               TextButton(
                 key: const Key('reset-button'),
-                onPressed: _resetCounter,
+                onPressed: _counter == 0 ? null : _resetCounter,
                 child: const Text('Reset'),
               ),
             ],
