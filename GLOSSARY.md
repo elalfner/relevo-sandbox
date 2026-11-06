@@ -19,3 +19,7 @@ _Avoid_: Build label, build, build version
 **Version label**:
 The text "v1.0.0" shown in the app bar subtitle. It is written in the app, not read from `pubspec.yaml`, so it can differ from the pubspec version.
 _Avoid_: App version, version number
+
+**Reset history**:
+The in-memory list of the values the counter had at each Reset, newest first, kept up to 20.
+_Avoid_: Log, record, timeline

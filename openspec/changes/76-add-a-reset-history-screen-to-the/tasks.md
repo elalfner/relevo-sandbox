@@ -11,8 +11,8 @@
 
 ## 3. Documentation
 
-- [ ] 3.1 Add the Reset history entry to `GLOSSARY.md` exactly as given in design.md. Verify the entry text matches and nothing else changed.
+- [x] 3.1 Add the Reset history entry to `GLOSSARY.md` exactly as given in design.md. Verify the entry text matches and nothing else changed.
 
 ## 4. Checks
 
-- [ ] 4.1 Run `flutter analyze` and `flutter test` and verify both pass.
+- [x] 4.1 Run `flutter analyze` and `flutter test` and verify both pass.
