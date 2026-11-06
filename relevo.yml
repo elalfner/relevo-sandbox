@@ -46,3 +46,17 @@ trust: private-team                # private-team | public
 # labels:
 #   ready: relevo:ready
 #   built: relevo:built
+
+# TEST of the model plan of relevo (model-per-issue): every role picks its model per issue, between a floor and a ceiling.
+agents:
+  dev:
+    model: auto
+  qa:
+    spec:
+      model: auto
+    security:
+      model: auto
+    code:
+      model: auto
+    interface:
+      model: auto
