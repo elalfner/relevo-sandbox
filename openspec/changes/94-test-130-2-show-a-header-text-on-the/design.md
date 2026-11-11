@@ -12,7 +12,7 @@
 
 ## Decisions
 
-- The header is a `Text` with key `home-header` in the body Column of `MyHomePage`, placed above the counter text. No new widget file, no new dependency.
+- The header is a `Text` with key `guided-header` in the body Column of `MyHomePage`, placed above the counter text. No new widget file, no new dependency.
 
 ## Risks / Trade-offs
 
