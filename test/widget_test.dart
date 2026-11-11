@@ -129,6 +129,38 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('Header text shows above the counter at start', (tester) async {
+    await tester.pumpWidget(const MyApp());
+
+    final header = find.byKey(const Key('guided-header'));
+    expect(header, findsOneWidget);
+    expect(tester.widget<Text>(header).data, 'Relevo header');
+    expect(find.text('Relevo header'), findsOneWidget);
+    expect(
+      tester.getBottomLeft(header).dy,
+      lessThanOrEqualTo(tester.getTopLeft(find.text('0')).dy),
+    );
+  });
+
+  testWidgets('Header text stays the same after increment and reset', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+
+    await tapAdd(tester, 3);
+    expect(find.text('3'), findsOneWidget);
+    expect(find.text('Relevo header'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('reset-button')));
+    await tester.pump();
+    expect(find.text('0'), findsOneWidget);
+    expect(find.text('Relevo header'), findsOneWidget);
+    expect(
+      tester.widget<Text>(find.byKey(const Key('guided-header'))).data,
+      'Relevo header',
+    );
+  });
+
   testWidgets('App bar shows the version subtitle', (tester) async {
     await tester.pumpWidget(const MyApp());
 

@@ -179,6 +179,7 @@ class _MyHomePageState extends State<MyHomePage> {
             // wireframe for each widget.
             mainAxisSize: MainAxisSize.min,
             children: [
+              const Text('Relevo header', key: Key('guided-header')),
               Text(
                 _greeting,
                 key: const Key('greeting-text'),
