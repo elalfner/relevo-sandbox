@@ -1,11 +1,7 @@
 schema: spec-driven
 
 context: |
-  SANDBOX-130 context marker. Every widget test file you create must have a name ending in `_guided_test.dart`.
-
-rules:
-  tasks:
-    - SANDBOX-130 tasks rule marker. Keep the tasks of this change to one group.
+  SANDBOX-130 context marker. Every Key you give to a widget in lib/ must start with `guided-`, for example `guided-title`.
 
 operations:
   apply:
