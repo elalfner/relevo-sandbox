@@ -13,4 +13,4 @@
 
 ## 3. Checks
 
-- [ ] 3.1 Run `flutter analyze` and `flutter test`; both pass.
+- [x] 3.1 Run `flutter analyze` and `flutter test`; both pass.
