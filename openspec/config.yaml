@@ -3,4 +3,4 @@ schema: spec-driven
 operations:
   apply:
     guidance:
-      - SANDBOX-130 apply guidance marker. The description of every testWidgets you write must end with the text ` [s130]`.
+      - SANDBOX-130 apply guidance marker. If your mode is fix, end the description of every testWidgets you add or change with the text ` [s130-fix]`. In build or integrate mode never write that text.

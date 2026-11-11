@@ -29,7 +29,7 @@ limits:
   built_unreviewed_per_person: 3   # built issues one person may have waiting
   concurrent_agents: 3             # unattended runs at the same time
   review_sla_hours: 8              # reminder, then escalation after the same time again
-  run_max_turns: 100               # per unattended run
+  run_max_turns: 150               # per unattended run
   run_max_cost: 5                  # REQUIRED: US dollars per unattended run; choose your own
 
 qa:
@@ -46,3 +46,10 @@ trust: private-team                # private-team | public
 labels:
   ready: relevo130:ready   # TEMPORARY: so the old workflow on main does not start
 #   built: relevo:built
+
+# TEMPORARY: retry test of elalfner/relevo#130
+agents:
+  dev:
+    model: auto
+    floor: haiku
+    ceiling: sonnet
