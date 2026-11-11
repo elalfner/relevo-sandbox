@@ -168,7 +168,8 @@ void main() {
     await tester.tap(find.byKey(const Key('reset-button')));
     await tester.pumpAndSettle();
 
-    expect(find.text('Reset the counter of 100?'), findsOneWidget);
+    // s130-fix
+    expect(find.text(ResetConfirmDialog.questionFor(100)), findsOneWidget);
   });
 
   testWidgets('Parity text says Even at 0', (tester) async {

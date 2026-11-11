@@ -36,7 +36,8 @@ void main() {
   ) async {
     await openDialog(tester, 12, []);
 
-    expect(find.text('Reset the counter of 12?'), findsOneWidget);
+    // s130-fix
+    expect(find.text(ResetConfirmDialog.questionFor(12)), findsOneWidget);
     expect(find.text(ResetConfirmDialog.cancelLabel), findsOneWidget);
     expect(find.text(ResetConfirmDialog.confirmLabel), findsOneWidget);
   });
