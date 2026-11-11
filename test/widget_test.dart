@@ -142,6 +142,40 @@ void main() {
     expect(find.text('v1.0.0'), findsOneWidget);
   });
 
+  testWidgets('Footer shows Relevo test at the bottom at start', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+
+    final footer = find.byKey(const Key('footer-text'));
+    expect(footer, findsOneWidget);
+    expect(tester.widget<Text>(footer).data, 'Relevo test');
+    expect(find.text('Relevo test'), findsOneWidget);
+    expect(
+      tester.getTopLeft(footer).dy,
+      greaterThan(tester.getBottomLeft(find.text('Reset')).dy),
+    );
+  });
+
+  testWidgets('Footer is unchanged after increment and after reset', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+    final footer = find.byKey(const Key('footer-text'));
+    final start = tester.getTopLeft(footer);
+
+    await tapAdd(tester, 3);
+    expect(find.text('3'), findsOneWidget);
+    expect(find.text('Relevo test'), findsOneWidget);
+    expect(tester.getTopLeft(footer), start);
+
+    await tester.tap(find.byKey(const Key('reset-button')));
+    await tester.pump();
+    expect(find.text('0'), findsOneWidget);
+    expect(find.text('Relevo test'), findsOneWidget);
+    expect(tester.getTopLeft(footer), start);
+  });
+
   testWidgets('Version subtitle is ellipsized on a very small screen', (
     tester,
   ) async {

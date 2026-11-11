@@ -203,6 +203,17 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ),
       ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Text(
+            'Relevo test',
+            key: const Key('footer-text'),
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+        ),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: _incrementCounter,
         tooltip: 'Increment',
