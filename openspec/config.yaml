@@ -1,9 +1,6 @@
 schema: spec-driven
 
-context: |
-  SANDBOX-130 context marker. Every Key you give to a widget in lib/ must start with `guided-`, for example `guided-title`.
-
 operations:
   apply:
     guidance:
-      - SANDBOX-130 apply guidance marker. Keep the final report short.
+      - SANDBOX-130 apply guidance marker. The description of every testWidgets you write must end with the text ` [s130]`.
