@@ -7,9 +7,9 @@
 
 ## 2. Home screen
 
-- [ ] 2.1 In `lib/main.dart`, make Reset reset at once below 10 and otherwise open the dialog, resetting only on Confirm (Cancel and back keep the counter; exactly 10 opens the dialog).
-- [ ] 2.2 Add widget tests to `test/widget_test.dart` for the four scenarios (12 shows dialog and keeps 12; Confirm resets to 0; Cancel and back keep 12; 9 resets without a dialog) and for the counter of exactly 10, reading the text from the dialog constants.
-- [ ] 2.3 Update the existing tests that reset a counter of 10 or more (over 1000) to tap Confirm.
+- [x] 2.1 In `lib/main.dart`, make Reset reset at once below 10 and otherwise open the dialog, resetting only on Confirm (Cancel and back keep the counter; exactly 10 opens the dialog).
+- [x] 2.2 Add widget tests to `test/widget_test.dart` for the four scenarios (12 shows dialog and keeps 12; Confirm resets to 0; Cancel and back keep 12; 9 resets without a dialog) and for the counter of exactly 10, reading the text from the dialog constants.
+- [x] 2.3 Update the existing tests that reset a counter of 10 or more (over 1000) to tap Confirm.
 
 ## 3. Checks
 

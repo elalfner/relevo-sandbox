@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:relevo_sandbox/widgets/reset_confirm_dialog.dart';
 
 const String appVersion = 'v1.0.0';
 
@@ -105,7 +106,18 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void _resetCounter() {
+  /// From this count on, Reset asks for confirmation first.
+  static const int _confirmResetThreshold = 10;
+
+  /// Clears the counter at once below [_confirmResetThreshold]. Otherwise it
+  /// clears it only when the person confirms the dialog.
+  Future<void> _resetCounter() async {
+    if (_counter < _confirmResetThreshold) {
+      setState(() => _counter = 0);
+      return;
+    }
+    final confirmed = await ResetConfirmDialog.show(context, _counter);
+    if (!mounted || !confirmed) return;
     setState(() => _counter = 0);
   }
 
