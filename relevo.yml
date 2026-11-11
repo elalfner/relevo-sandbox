@@ -3,7 +3,7 @@
 # Never put API keys or tokens here; they belong in the repository secret store.
 
 branches:
-  base: dev            # integration branch: feature pull requests target it
+  base: relevo-121-test   # TEMPORARY: test of elalfner/relevo#121
   release: main        # promoted from base in a separate pull request
 
 tracker: github        # github (more later)
@@ -26,7 +26,7 @@ review:
   merger: approver     # author | approver: who runs /relevo:ship
 
 limits:
-  built_unreviewed_per_person: 1   # built issues one person may have waiting
+  built_unreviewed_per_person: 10   # built issues one person may have waiting
   concurrent_agents: 3             # unattended runs at the same time
   review_sla_hours: 8              # reminder, then escalation after the same time again
   run_max_turns: 100               # per unattended run
@@ -43,6 +43,6 @@ language: en                       # language of hand-off messages (en, es)
 trust: private-team                # private-team | public
 
 # Rename any label here; keys are fixed, names are yours.
-# labels:
-#   ready: relevo:ready
+labels:
+  ready: relevo121:ready   # TEMPORARY: so the workflow on main does not start
 #   built: relevo:built
