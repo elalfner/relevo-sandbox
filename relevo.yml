@@ -3,7 +3,7 @@
 # Never put API keys or tokens here; they belong in the repository secret store.
 
 branches:
-  base: dev            # integration branch: feature pull requests target it
+  base: relevo-130-test   # TEMPORARY: test of elalfner/relevo#130
   release: main        # promoted from base in a separate pull request
 
 tracker: github        # github (more later)
@@ -43,6 +43,6 @@ language: en                       # language of hand-off messages (en, es)
 trust: private-team                # private-team | public
 
 # Rename any label here; keys are fixed, names are yours.
-# labels:
-#   ready: relevo:ready
+labels:
+  ready: relevo130:ready   # TEMPORARY: so the old workflow on main does not start
 #   built: relevo:built
