@@ -86,7 +86,7 @@ void main() {
 
     await tapReset(tester);
 
-    expect(find.text('Reset the counter of 12?'), findsOneWidget);
+    expect(find.text(ResetConfirmDialog.questionFor(12)), findsOneWidget);
     expect(find.text('12'), findsOneWidget);
     expect(find.text('0'), findsNothing);
   });
@@ -151,7 +151,7 @@ void main() {
 
     await tapReset(tester);
 
-    expect(find.text('Reset the counter of 10?'), findsOneWidget);
+    expect(find.text(ResetConfirmDialog.questionFor(10)), findsOneWidget);
     expect(find.text('10'), findsOneWidget);
   });
 
@@ -163,7 +163,7 @@ void main() {
 
     await tapReset(tester);
 
-    expect(find.text('Reset the counter of 100?'), findsOneWidget);
+    expect(find.text(ResetConfirmDialog.questionFor(100)), findsOneWidget);
     expect(find.text('100'), findsOneWidget);
   });
 

@@ -13,7 +13,7 @@ void main() {
       const MaterialApp(home: Scaffold(body: ResetConfirmDialog(count: 12))),
     );
 
-    expect(find.text('Reset the counter of 12?'), findsOneWidget);
+    expect(find.text(ResetConfirmDialog.questionFor(12)), findsOneWidget);
     expect(
       find.widgetWithText(TextButton, ResetConfirmDialog.cancelLabel),
       findsOneWidget,
@@ -22,8 +22,14 @@ void main() {
       find.widgetWithText(TextButton, ResetConfirmDialog.confirmLabel),
       findsOneWidget,
     );
-    expect(find.bySemanticsLabel('Cancel reset'), findsOneWidget);
-    expect(find.bySemanticsLabel('Confirm reset'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(ResetConfirmDialog.cancelSemanticsLabel),
+      findsOneWidget,
+    );
+    expect(
+      find.bySemanticsLabel(ResetConfirmDialog.confirmSemanticsLabel),
+      findsOneWidget,
+    );
     semantics.dispose();
   });
 }
