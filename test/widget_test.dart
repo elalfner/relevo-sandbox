@@ -156,4 +156,51 @@ void main() {
     expect(text.overflow, TextOverflow.ellipsis);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('Section title shows below the counter at start [s130]', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+
+    final title = find.byKey(const Key('section-title'));
+    expect(title, findsOneWidget);
+    expect(find.text('Relevo section'), findsOneWidget);
+    expect(
+      tester.getTopLeft(title).dy,
+      greaterThan(tester.getBottomLeft(find.text('0')).dy - 1),
+    );
+  });
+
+  testWidgets('Section title stays below the counter after increment [s130]', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+    await tapAdd(tester, 3);
+
+    final title = find.byKey(const Key('section-title'));
+    expect(find.text('3'), findsOneWidget);
+    expect(find.text('Relevo section'), findsOneWidget);
+    expect(
+      tester.getTopLeft(title).dy,
+      greaterThan(tester.getBottomLeft(find.text('3')).dy - 1),
+    );
+  });
+
+  testWidgets('Section title stays below the counter after reset [s130]', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+    await tapAdd(tester, 3);
+
+    await tester.tap(find.byKey(const Key('reset-button')));
+    await tester.pump();
+
+    final title = find.byKey(const Key('section-title'));
+    expect(find.text('0'), findsOneWidget);
+    expect(find.text('Relevo section'), findsOneWidget);
+    expect(
+      tester.getTopLeft(title).dy,
+      greaterThan(tester.getBottomLeft(find.text('0')).dy - 1),
+    );
+  });
 }
