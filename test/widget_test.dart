@@ -117,6 +117,47 @@ void main() {
     expect(find.text('Odd'), findsNothing);
   });
 
+  testWidgets('Home label is shown below the counter at start', (tester) async {
+    await tester.pumpWidget(const MyApp());
+
+    final label = find.byKey(const Key('home-label'));
+    expect(label, findsOneWidget);
+    expect(tester.widget<Text>(label).data, 'Relevo 121 B');
+    expect(
+      tester.getTopLeft(label).dy,
+      greaterThan(tester.getBottomLeft(find.text('0')).dy - 1),
+    );
+  });
+
+  testWidgets('Home label stays the same after the counter changes', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+    await tapAdd(tester, 3);
+
+    expect(find.text('3'), findsOneWidget);
+    expect(find.text('Relevo 121 B'), findsOneWidget);
+    expect(
+      tester.getTopLeft(find.byKey(const Key('home-label'))).dy,
+      greaterThan(tester.getBottomLeft(find.text('3')).dy - 1),
+    );
+  });
+
+  testWidgets('Home label stays the same after reset', (tester) async {
+    await tester.pumpWidget(const MyApp());
+    await tapAdd(tester, 3);
+
+    await tester.tap(find.byKey(const Key('reset-button')));
+    await tester.pump();
+
+    expect(find.text('0'), findsOneWidget);
+    expect(find.text('Relevo 121 B'), findsOneWidget);
+    expect(
+      tester.widget<Text>(find.byKey(const Key('home-label'))).data,
+      'Relevo 121 B',
+    );
+  });
+
   testWidgets('Two quick taps on reset leave the counter at 0', (tester) async {
     await tester.pumpWidget(const MyApp());
     await tapAdd(tester, 3);

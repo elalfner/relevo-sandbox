@@ -190,6 +190,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 '$_counter',
                 style: Theme.of(context).textTheme.headlineMedium,
               ),
+              const Text('Relevo 121 B', key: Key('home-label')),
               Text(
                 _counter.isEven ? 'Even' : 'Odd',
                 key: const Key('parity-text'),
