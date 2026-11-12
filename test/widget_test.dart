@@ -47,6 +47,18 @@ void main() {
     expect(find.text('5'), findsNothing);
   });
 
+  testWidgets('Reset sets a counter of 3 to 0', (tester) async {
+    await tester.pumpWidget(const MyApp());
+    await tapAdd(tester, 3);
+    expect(find.text('3'), findsOneWidget);
+
+    await tester.tap(find.text('Reset'));
+    await tester.pump();
+
+    expect(find.text('0'), findsOneWidget);
+    expect(find.text('3'), findsNothing);
+  });
+
   testWidgets('Reset keeps a zero counter at 0', (tester) async {
     await tester.pumpWidget(const MyApp());
     expect(find.text('Reset'), findsOneWidget);
