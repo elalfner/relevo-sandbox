@@ -46,3 +46,6 @@ trust: private-team                # private-team | public
 # labels:
 #   ready: relevo:ready
 #   built: relevo:built
+# TEST ONLY (relevo#160): another ready label, so that applying it starts no workflow of main
+labels:
+  ready: relevo132:ready
