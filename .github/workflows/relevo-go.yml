@@ -699,7 +699,9 @@ jobs:
             fi
           fi
           if [ -n "$retry_body" ]; then
-            gh issue edit "$ISSUE" --remove-label relevo167:ready --remove-label relevo167:queued --remove-label relevo167:building --add-label relevo167:queued
+            gh issue edit "$ISSUE" --remove-label relevo167:ready --remove-label relevo167:queued --remove-label relevo167:building
+            # TEST ONLY (relevo#167): the add is a second command, because in one command the removal of queued wins over its addition
+            gh issue edit "$ISSUE" --add-label relevo167:queued
             gh issue comment "$ISSUE" --body "$retry_body"
             echo "reported=true" >> "$GITHUB_OUTPUT"
             exit 0
