@@ -6,8 +6,8 @@
 
 ## 1. Add 20 (template)
 
-- [ ] 1.1 Add the "Add 20" button (key `add-twenty-button`) after "Add 10" in `lib/main.dart`, adding 20 to the counter; verify with the widget test of 1.2
-- [ ] 1.2 Add `test/add_twenty_test.dart` covering 0 -> 20 and 3 -> 23; verify `flutter test test/add_twenty_test.dart` passes
+- [x] 1.1 Add the "Add 20" button (key `add-twenty-button`) after "Add 10" in `lib/main.dart`, adding 20 to the counter; verify with the widget test of 1.2
+- [x] 1.2 Add `test/add_twenty_test.dart` covering 0 -> 20 and 3 -> 23; verify `flutter test test/add_twenty_test.dart` passes
 
 ## 2. Replicas
 
