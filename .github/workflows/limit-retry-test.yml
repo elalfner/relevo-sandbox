@@ -1,0 +1,89 @@
+# TEST ONLY, lives on the branch test/usage-limit-retry-118. Runs the final step of the go workflow of
+# elalfner/relevo (pull request 166) against issue 112 with a synthetic usage-limit log. No model runs, no quota is used.
+name: limit-retry-test
+on:
+  push:
+    branches: [test/usage-limit-retry-118]
+  workflow_dispatch:
+permissions:
+  contents: read
+  issues: write
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      ISSUE: '112'
+      GITHUB_REPOSITORY: ${{ github.repository }}
+      PACKAGE_SHA: c4c27b859c602ef89e582c5427402a14b2f10003
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Fetch the scripts of the pull request, at its commit
+        run: |
+          mkdir -p .relevo-plugin
+          curl -fsSL "https://codeload.github.com/elalfner/relevo/tar.gz/$PACKAGE_SHA" | tar -xz --strip-components=1 -C .relevo-plugin
+          test -f .relevo-plugin/scripts/limit-retry.mjs
+          node --version
+
+      - name: Run the final step four times against a synthetic usage-limit log
+        run: |
+          set -uo pipefail
+          fail() { echo "::error::$*"; FAILED=1; }
+          FAILED=0
+          reset=$(( $(date +%s) + 10800 ))
+          echo "[{\"type\":\"rate_limit_event\",\"rate_limit_info\":{\"status\":\"rejected\",\"rateLimitType\":\"five_hour\",\"utilization\":1,\"resetsAt\":$reset}},{\"type\":\"result\",\"is_error\":true,\"result\":\"usage limit reached\"}]" > "$RUNNER_TEMP/limit.json"
+          # The run: block of the step `no_outcome` of the go template, exactly as shipped.
+          node -e '
+            const lines = require("fs").readFileSync(".relevo-plugin/templates/workflows/relevo-go.yml", "utf8").split("\n");
+            const at = lines.findIndex((l) => l.trim() === "id: no_outcome");
+            const run = lines.findIndex((l, i) => i > at && /^\s+run: \|$/.test(l));
+            const out = [];
+            for (let i = run + 1; i < lines.length && (lines[i].trim() === "" || /^ {10}/.test(lines[i])); i += 1) out.push(lines[i].slice(10));
+            require("fs").writeFileSync(process.env.RUNNER_TEMP + "/step.sh", out.join("\n"));'
+          step() {
+            gh issue edit "$ISSUE" --remove-label relevo:queued --remove-label relevo:qa-failed --add-label relevo:building > /dev/null
+            JOB_STATUS=failure RUN_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+              EXECUTION_FILE="$RUNNER_TEMP/limit.json" RESCUE_STATE=nothing RESCUE_BRANCH= RESCUE_DETAIL= GITHUB_OUTPUT="$RUNNER_TEMP/out.txt" \
+              bash -e "$RUNNER_TEMP/step.sh"
+          }
+          labels() { gh issue view "$ISSUE" --json labels --jq '[.labels[].name] | join(",")'; }
+          lastcomment() { gh api "repos/$GITHUB_REPOSITORY/issues/$ISSUE/comments?per_page=100" --jq '.[-1] | .user.type + " | " + .body'; }
+          for n in 1 2 3; do
+            echo "::group::retry $n"
+            step || fail "step $n failed"
+            l=$(labels); c=$(lastcomment)
+            echo "labels: $l"; echo "$c"
+            case ",$l," in *,relevo:queued,*) ;; *) fail "retry $n: not queued" ;; esac
+            case ",$l," in *,relevo:qa-failed,*) fail "retry $n: qa-failed was set" ;; esac
+            echo "$c" | grep -q "^Bot | " || fail "retry $n: the comment is not from a bot"
+            echo "$c" | grep -q "retry $n of 3" || fail "retry $n: wrong number"
+            echo "$c" | grep -q "relevo:retry" || fail "retry $n: no marker"
+            if [ "$n" = 1 ]; then
+              # The planner of this package reads the comments through the real API and holds the issue.
+              plan=$(node .relevo-plugin/scripts/go-plan.mjs --repo "$GITHUB_REPOSITORY" --only "$ISSUE" --config relevo.yml) || fail "go-plan failed"
+              echo "$plan" | jq -c '.decisions[0] | {issue, action, reason}'
+              [ "$(echo "$plan" | jq -r '.decisions[0].action')" = skip ] || fail "the planner did not hold the issue"
+              echo "$plan" | jq -r '.decisions[0].reason' | grep -q "usage limit" || fail "wrong hold reason"
+            fi
+            echo "::endgroup::"
+          done
+          echo "::group::the fourth stop"
+          step || fail "step 4 failed"
+          l=$(labels); c=$(lastcomment)
+          echo "labels: $l"; echo "$c"
+          case ",$l," in *,relevo:qa-failed,*) ;; *) fail "stop: not qa-failed" ;; esac
+          case ",$l," in *,relevo:queued,*) fail "stop: still queued" ;; esac
+          echo "$c" | grep -q "after 3 automatic retries" || fail "stop: wrong comment"
+          echo "::endgroup::"
+          echo "::group::cleanup"
+          gh issue edit "$ISSUE" --remove-label relevo:queued --remove-label relevo:qa-failed --remove-label relevo:building > /dev/null
+          gh issue close "$ISSUE" --reason "not planned" --comment "Test finished: closed." > /dev/null
+          echo "::endgroup::"
+          [ "$FAILED" = 0 ]
+
+      - name: Never leave the issue queued
+        if: always()
+        run: |
+          gh issue edit "$ISSUE" --remove-label relevo:queued --remove-label relevo:building --remove-label relevo:ready || true
