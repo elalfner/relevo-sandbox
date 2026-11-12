@@ -94,3 +94,4 @@ jobs:
           echo "bun: $("$RUNNER_TEMP/bun/bun" --version)"
           echo "openspec: $(openspec --version)"
           echo "bun path output: ${{ steps.bun.outputs.path }}"
+# second run
