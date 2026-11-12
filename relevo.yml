@@ -3,7 +3,7 @@
 # Never put API keys or tokens here; they belong in the repository secret store.
 
 branches:
-  base: dev            # integration branch: feature pull requests target it
+  base: test/relevo167-base            # integration branch: feature pull requests target it
   release: main        # promoted from base in a separate pull request
 
 tracker: github        # github (more later)
@@ -27,7 +27,7 @@ review:
 
 limits:
   built_unreviewed_per_person: 1   # built issues one person may have waiting
-  concurrent_agents: 3             # unattended runs at the same time
+  concurrent_agents: 1             # unattended runs at the same time
   review_sla_hours: 8              # reminder, then escalation after the same time again
   run_max_turns: 100               # per unattended run
   run_max_cost: 5                  # REQUIRED: US dollars per unattended run; choose your own
@@ -46,3 +46,13 @@ trust: private-team                # private-team | public
 # labels:
 #   ready: relevo:ready
 #   built: relevo:built
+
+# TEST ONLY (relevo#167): its own label names, so that applying them starts no workflow of main and the queue of main never sees these issues
+labels:
+  ready: relevo167:ready
+  queued: relevo167:queued
+  building: relevo167:building
+  built: relevo167:built
+  needs-spec: relevo167:needs-spec
+  blocked: relevo167:blocked
+  qa-failed: relevo167:qa-failed
