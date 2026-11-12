@@ -56,7 +56,7 @@ jobs:
             all.forEach((e) => { if (e.type === "assistant") { const k = e.parent_tool_use_id ?? "main"; by[k] ??= { n: 0, models: new Set(), hasUsage: 0 }; by[k].n++; if (e.message?.model) by[k].models.add(e.message.model); if (e.message?.usage) by[k].hasUsage++; } });
             console.log(JSON.stringify(Object.fromEntries(Object.entries(by).map(([k, v]) => [k, { n: v.n, models: [...v.models], hasUsage: v.hasUsage }])), null, 1));
             console.log(JSON.stringify(all.filter((e) => e.type === "system" && e.subtype === "task_notification").map((e) => ({ id: e.tool_use_id, keys: Object.keys(e), usage: e.usage }))));
-            console.log(JSON.stringify(all.filter((e) => e.type === "result").map((e) => ({ keys: Object.keys(e), modelUsage: e.modelUsage }))));
+            console.log(JSON.stringify(all.filter((e) => e.type === "result").map((e) => ({ subagent_stats: e.subagent_stats, since: e.model_usage_since_last_result }))));
           '
           echo "--- run-usage.mjs"
           node .relevo-plugin-168/scripts/run-usage.mjs --file "$EXECUTION_FILE" --subscription
