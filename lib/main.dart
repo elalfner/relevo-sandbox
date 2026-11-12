@@ -190,6 +190,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 '$_counter',
                 style: Theme.of(context).textTheme.headlineMedium,
               ),
+              const Text('Tap the button to count', key: Key('count-hint')),
               if (_counter == 31)
                 const Text('Thirty-one!', key: Key('thirty-one-text')),
               Text(
