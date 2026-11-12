@@ -1,0 +1,1 @@
+{"exceptions":[{"path":"docs/aws-example.md","pattern":"AKIAIOSFODNN7EXAMPLE","reason":"TEST ONLY (relevo#165): the example key of the AWS documentation; no change of the test touches this path"}]}

@@ -10,3 +10,7 @@ Relevo sandbox: a minimal Flutter app used to test the Relevo workflow end to en
 - Never commit credentials, tokens or `.env` files.
 - Never leave `print`, `TODO` or `debugPrint` markers in committed code.
 - Branches: `dev` is the integration branch, `main` is the release branch. Never push to either directly.
+
+## Style [advice]
+
+- Prefer short widget names.
