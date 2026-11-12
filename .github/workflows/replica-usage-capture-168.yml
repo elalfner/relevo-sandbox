@@ -27,7 +27,7 @@ jobs:
           prompt: >-
             Launch exactly three subagents, one after another, with the Agent tool and subagent_type general-purpose.
             The description parameter of the first must be exactly "replica 2.1", of the second exactly "replica 2.2", of the third
-            exactly "replica 2.2". The prompt of each is: Reply with the single word ok and use no tools.
+            exactly "replica 2.2". Pass the parameter model with the value "haiku" in each call. The prompt of each is: Reply with the single word ok and use no tools.
             When the three have answered, reply with the single word done.
           claude_args: >-
             --model haiku
@@ -47,6 +47,16 @@ jobs:
             console.log(JSON.stringify(calls, null, 1));
             const started = all.filter((e) => e.type === "system" && e.subtype === "task_started").map((e) => ({ tool_use_id: e.tool_use_id, subagent_type: e.subagent_type, description: e.description }));
             console.log("--- task_started"); console.log(JSON.stringify(started, null, 1));
+          '
+          echo "--- messages per parent_tool_use_id (does the log carry the subagents' own messages and usage?)"
+          node -e '
+            const t = require("fs").readFileSync(process.env.EXECUTION_FILE, "utf8");
+            let all; try { all = JSON.parse(t); } catch { all = t.split("\n").filter(Boolean).map((l) => JSON.parse(l)); }
+            const by = {};
+            all.forEach((e) => { if (e.type === "assistant") { const k = e.parent_tool_use_id ?? "main"; by[k] ??= { n: 0, models: new Set(), hasUsage: 0 }; by[k].n++; if (e.message?.model) by[k].models.add(e.message.model); if (e.message?.usage) by[k].hasUsage++; } });
+            console.log(JSON.stringify(Object.fromEntries(Object.entries(by).map(([k, v]) => [k, { n: v.n, models: [...v.models], hasUsage: v.hasUsage }])), null, 1));
+            console.log(JSON.stringify(all.filter((e) => e.type === "system" && e.subtype === "task_notification").map((e) => ({ id: e.tool_use_id, keys: Object.keys(e), usage: e.usage }))));
+            console.log(JSON.stringify(all.filter((e) => e.type === "result").map((e) => ({ keys: Object.keys(e), modelUsage: e.modelUsage }))));
           '
           echo "--- run-usage.mjs"
           node .relevo-plugin-168/scripts/run-usage.mjs --file "$EXECUTION_FILE" --subscription
