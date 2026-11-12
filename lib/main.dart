@@ -105,6 +105,10 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  void _addFive() {
+    setState(() => _counter += 5);
+  }
+
   void _resetCounter() {
     setState(() => _counter = 0);
   }
@@ -195,6 +199,11 @@ class _MyHomePageState extends State<MyHomePage> {
               Text(
                 _counter.isEven ? 'Even' : 'Odd',
                 key: const Key('parity-text'),
+              ),
+              TextButton(
+                key: const Key('add-five-button'),
+                onPressed: _addFive,
+                child: const Text('Add 5'),
               ),
               TextButton(
                 key: const Key('reset-button'),

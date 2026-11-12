@@ -2,8 +2,8 @@
 
 ## 1. Add 5 button
 
-- [ ] 1.1 Add the "Add 5" button (key `add-five-button`) that adds 5 to the counter in `lib/main.dart`; verify by running the app logic in the widget test of 1.2
-- [ ] 1.2 Add a widget test: counter 2, tap "Add 5", counter shows 7 and the parity text shows "Odd" and the greeting is shown; `flutter test` passes
+- [x] 1.1 Add the "Add 5" button (key `add-five-button`) that adds 5 to the counter in `lib/main.dart`; verify by running the app logic in the widget test of 1.2
+- [x] 1.2 Add a widget test: counter 2, tap "Add 5", counter shows 7 and the parity text shows "Odd" and the greeting is shown; `flutter test` passes
 
 ## 2. Subtract 1 button
 
