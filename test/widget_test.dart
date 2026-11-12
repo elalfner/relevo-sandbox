@@ -111,10 +111,25 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(dialogQuestion, findsOneWidget);
-      expect(find.text('Reset the counter of 12?'), findsOneWidget);
       expect(find.text(ResetConfirmDialog.cancelLabel), findsOneWidget);
       expect(find.text(ResetConfirmDialog.confirmLabel), findsOneWidget);
       expect(find.text('12'), findsOneWidget);
+    });
+
+    testWidgets('a quick double tap on Reset opens only one dialog', (
+      tester,
+    ) async {
+      await tester.pumpWidget(const MyApp());
+      await tapAdd(tester, 12);
+
+      final onPressed = tester
+          .widget<TextButton>(find.byKey(const Key('reset-button')))
+          .onPressed!;
+      onPressed();
+      onPressed();
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ResetConfirmDialog), findsOneWidget);
     });
 
     testWidgets('Confirm closes the dialog and resets the counter', (

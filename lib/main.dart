@@ -79,6 +79,7 @@ class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
   late final String _greeting;
   String? _buildNumber;
+  bool _confirming = false;
 
   @override
   void initState() {
@@ -111,9 +112,15 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _resetCounter() async {
+    if (_confirming) return;
     if (_counter >= resetConfirmThreshold) {
-      final confirmed = await ResetConfirmDialog.show(context, _counter);
-      if (!mounted || !confirmed) return;
+      _confirming = true;
+      try {
+        final confirmed = await ResetConfirmDialog.show(context, _counter);
+        if (!mounted || !confirmed) return;
+      } finally {
+        _confirming = false;
+      }
     }
     setState(() => _counter = 0);
   }

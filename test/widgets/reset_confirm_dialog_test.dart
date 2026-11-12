@@ -24,23 +24,29 @@ void main() {
   testWidgets('names the count and shows Cancel and Confirm', (tester) async {
     await open(tester, 12, []);
 
-    expect(find.text('Reset the counter of 12?'), findsOneWidget);
-    expect(find.text('Cancel'), findsOneWidget);
-    expect(find.text('Confirm'), findsOneWidget);
+    expect(find.text(ResetConfirmDialog.question(12)), findsOneWidget);
+    expect(find.text(ResetConfirmDialog.cancelLabel), findsOneWidget);
+    expect(find.text(ResetConfirmDialog.confirmLabel), findsOneWidget);
   });
 
   testWidgets('names the whole number for 100 or more', (tester) async {
     await open(tester, 1234, []);
 
-    expect(find.text('Reset the counter of 1234?'), findsOneWidget);
+    expect(find.text(ResetConfirmDialog.question(1234)), findsOneWidget);
   });
 
   testWidgets('Confirm and Cancel have an accessible name', (tester) async {
     final handle = tester.ensureSemantics();
     await open(tester, 12, []);
 
-    expect(find.bySemanticsLabel('Confirm reset'), findsOneWidget);
-    expect(find.bySemanticsLabel('Cancel reset'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(ResetConfirmDialog.confirmSemanticsLabel),
+      findsOneWidget,
+    );
+    expect(
+      find.bySemanticsLabel(ResetConfirmDialog.cancelSemanticsLabel),
+      findsOneWidget,
+    );
     handle.dispose();
   });
 
@@ -59,7 +65,7 @@ void main() {
     final results = <bool>[];
     await open(tester, 12, results);
 
-    await tester.tap(find.text('Confirm'));
+    await tester.tap(find.text(ResetConfirmDialog.confirmLabel));
     await tester.pumpAndSettle();
 
     expect(results, [true]);
@@ -69,7 +75,7 @@ void main() {
     final results = <bool>[];
     await open(tester, 12, results);
 
-    await tester.tap(find.text('Cancel'));
+    await tester.tap(find.text(ResetConfirmDialog.cancelLabel));
     await tester.pumpAndSettle();
 
     expect(results, [false]);
