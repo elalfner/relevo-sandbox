@@ -32,5 +32,19 @@ void main() {
 
       expect(find.text('13'), findsOneWidget);
     });
+
+    testWidgets('leaves the greeting shown', (tester) async {
+      await openApp(tester);
+
+      await tester.tap(addTen);
+      await tester.pump();
+
+      expect(find.text('10'), findsOneWidget);
+      expect(find.text('Good morning'), findsOneWidget);
+      expect(
+        find.byKey(const Key('greeting-text')).hitTestable(),
+        findsOneWidget,
+      );
+    });
   });
 }

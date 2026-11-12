@@ -11,7 +11,7 @@
 
 ## 2. Replicas
 
-- [ ] 2.1 [replica] Add 30 button and its test
+- [x] 2.1 [replica] Add 30 button and its test
   - Rename: Add 20 -> Add 30, add-twenty-button -> add-thirty-button, addTwenty -> addThirty, 20 -> 30, 23 -> 33
   - Differences: none
 - [ ] 2.2 [replica] Add 40 button and its test
