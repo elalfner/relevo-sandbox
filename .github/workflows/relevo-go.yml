@@ -440,7 +440,7 @@ jobs:
         name: TEST ONLY synthetic usage-limit log
         if: steps.stubdec.outputs.stub == 'true'
         run: |
-          reset=$(( $(date +%s) + 10800 ))
+          reset=$(( $(date +%s) + 90 ))
           f="$RUNNER_TEMP/stub-limit.json"
           echo "[{\"type\":\"rate_limit_event\",\"rate_limit_info\":{\"status\":\"rejected\",\"rateLimitType\":\"five_hour\",\"utilization\":1,\"resetsAt\":$reset}},{\"type\":\"result\",\"is_error\":true,\"result\":\"usage limit reached\"}]" > "$f"
           echo "execution_file=$f" >> "$GITHUB_OUTPUT"
