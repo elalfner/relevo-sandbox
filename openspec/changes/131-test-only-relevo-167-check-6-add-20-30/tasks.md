@@ -4,7 +4,7 @@
 
 ## 1. Replicas
 
-- [ ] 1.1 [replica] Add 20 button; verified by its widget tests and `flutter analyze`, `flutter test`
+- [x] 1.1 [replica] Add 20 button; verified by its widget tests and `flutter analyze`, `flutter test`
   - Rename: Add 10 -> Add 20, add-ten-button -> add-twenty-button, _addTen -> _addTwenty, 10 -> 20, 13 -> 23
   - Differences: none
 - [ ] 1.2 [replica] Add 30 button; verified by its widget tests and `flutter analyze`, `flutter test`
