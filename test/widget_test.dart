@@ -156,4 +156,54 @@ void main() {
     expect(text.overflow, TextOverflow.ellipsis);
     expect(tester.takeException(), isNull);
   });
+
+  Future<void> tapKey(WidgetTester tester, String key) async {
+    final finder = find.byKey(Key(key));
+    await tester.ensureVisible(finder);
+    await tester.pump();
+    await tester.tap(finder);
+    await tester.pump();
+  }
+
+  for (final amount in [20, 30, 40]) {
+    final label = 'Add $amount';
+    final key =
+        'add-${{20: 'twenty', 30: 'thirty', 40: 'forty'}[amount]}-button';
+
+    testWidgets('$label adds $amount to a zero counter', (tester) async {
+      await tester.pumpWidget(const MyApp());
+      expect(find.text(label), findsOneWidget);
+      expect(find.text('0'), findsOneWidget);
+
+      await tapKey(tester, key);
+
+      expect(find.text('$amount'), findsOneWidget);
+      expect(find.text('0'), findsNothing);
+    });
+
+    testWidgets('$label adds $amount to a counter at 3', (tester) async {
+      await tester.pumpWidget(const MyApp());
+      await tapAdd(tester, 3);
+      expect(find.text('3'), findsOneWidget);
+
+      await tapKey(tester, key);
+
+      expect(find.text('${3 + amount}'), findsOneWidget);
+      expect(find.text('3'), findsNothing);
+    });
+  }
+
+  testWidgets('Add 10 still works and the greeting is still shown', (
+    tester,
+  ) async {
+    await tester.pumpWidget(MyApp(clock: () => DateTime(2024, 1, 1, 9)));
+    expect(find.text('Good morning'), findsOneWidget);
+    expect(find.text('Add 10'), findsOneWidget);
+
+    await tapKey(tester, 'add-ten-button');
+
+    expect(find.text('10'), findsOneWidget);
+    expect(find.text('0'), findsNothing);
+    expect(find.text('Good morning'), findsOneWidget);
+  });
 }

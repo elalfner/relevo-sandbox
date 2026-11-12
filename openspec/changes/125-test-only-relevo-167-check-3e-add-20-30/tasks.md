@@ -4,6 +4,6 @@
 
 ## 2. Tests
 
-- [ ] 2.1 Add widget tests in `test/widget_test.dart` for the six scenarios (each button from 0 and from 3)
-- [ ] 2.2 Add a widget test that "Add 10" and the greeting still work
-- [ ] 2.3 Run `flutter analyze` and `flutter test`
+- [x] 2.1 Add widget tests in `test/widget_test.dart` for the six scenarios (each button from 0 and from 3)
+- [x] 2.2 Add a widget test that "Add 10" and the greeting still work
+- [x] 2.3 Run `flutter analyze` and `flutter test`
