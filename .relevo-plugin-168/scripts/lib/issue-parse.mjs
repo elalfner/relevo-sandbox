@@ -1,0 +1,336 @@
+// Reads what the `go` gates need from an issue body.
+// The expected shape is documented in docs/issue-format.md.
+
+import { section } from './issue-sections.mjs';
+
+export const ATTACHMENT_HOSTS = ['github.com', 'user-images.githubusercontent.com', 'private-user-images.githubusercontent.com'];
+export const MAX_REFERENCES = 5;
+
+const FENCE_RE = /^\s*(```|~~~)/;
+const HEADING_RE = /^\s{0,3}(#{1,6})\s+(.*?)\s*#*\s*$/;
+const BULLET_RE = /^\s*(?:[-*+]|\d+[.)])\s+\S/;
+const WHEN_RE = /^\s*(?:[-*+]\s+)?(?:\*\*|__)?(?:WHEN|GIVEN)(?:\*\*|__)?(?:\s|:)/i;
+const THEN_RE = /^\s*(?:[-*+]\s+)?(?:\*\*|__)?THEN(?:\*\*|__)?(?:\s|:)/i;
+const EDGE_RE = /\b(edge[ -]?cases?|casos?\s+(?:borde|l[ií]mite|extremos?))\b/i;
+const DEPENDS_RE = /^\s*(?:[-*+]\s+)?Depend(?:s[- ]on|e(?:\s+de)?):\s*(.+)$/i;
+const ALLOW_RE = /^\s*(?:[-*+]\s+)?Allow-paths:\s*(.+)$/i;
+const PATTERN_RE = /^\s*(?:[-*+]\s+)?Pattern:\s*(.+)$/i;
+const PLATFORM_RE = /^\s*(?:[-*+]\s+)?Platform:\s*(.+)$/i;
+
+/** Remove fenced code blocks so examples inside them are not counted. */
+export function withoutCode(body) {
+  const out = [];
+  let inFence = false;
+  String(body ?? '').split('\n').forEach((line) => {
+    if (FENCE_RE.test(line)) {
+      inFence = !inFence;
+      return;
+    }
+    if (!inFence) out.push(line);
+  });
+  return out;
+}
+
+const REPO_FILE_RE = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+:[^\s]+$/;
+
+/** Is this path absolute, or does it climb out of the repository? */
+function leavesRepository(path) {
+  return path.startsWith('/') || /^[A-Za-z]:[\\/]/.test(path) || path.split(/[\\/]/).includes('..');
+}
+
+/**
+ * The "Code pointers" section, for what the fetcher downloads: only the bullets whose backticked target is a file of
+ * another repository, `owner/repo:path`. Every other bullet (a file of this repository, free text) is left alone.
+ * Returns { references: [{ kind: 'repo-file', target, repo, path, match }], problems }.
+ */
+export function parseCodePointers(body) {
+  const found = section(body, 'Code pointers');
+  const references = [];
+  const problems = [];
+  if (!found) return { references, problems };
+  let inFence = false;
+  found.text.split('\n').forEach((line) => {
+    if (FENCE_RE.test(line)) {
+      inFence = !inFence;
+      return;
+    }
+    if (inFence || !/^\s*[-*+]\s+/.test(line)) return;
+    const m = line.replace(/^\s*[-*+]\s+/, '').trim().match(/^`([^`]+)`\s*(?::\s*(.*))?$/);
+    if (!m || !REPO_FILE_RE.test(m[1].trim())) return;
+    const target = m[1].trim();
+    const [repo, ...rest] = target.split(':');
+    const path = rest.join(':');
+    if (leavesRepository(path)) {
+      problems.push(`"${target}" leaves the repository: use a path inside it`);
+      return;
+    }
+    references.push({ kind: 'repo-file', target, repo, path, match: (m[2] ?? '').trim() });
+  });
+  return { references, problems };
+}
+
+/**
+ * The "Design reference" section: a bullet per reference, `- <target>: <what must match>`, plus fenced example code.
+ * <target> is a backticked path of the repository, a backticked owner/repo:path of a linked repository, or a link.
+ * Returns { present, references: [{ kind, target, repo?, path?, allowed?, match }], code, problems }.
+ */
+export function parseDesign(body) {
+  const found = section(body, 'Design reference');
+  if (!found) return { present: false, references: [], code: 0, blocks: [], problems: [] };
+  let code = 0;
+  let inFence = false;
+  const references = [];
+  const problems = [];
+  // The size of each fenced block of example code, in characters, fences included.
+  const blocks = [];
+  found.text.split('\n').forEach((line) => {
+    if (FENCE_RE.test(line)) {
+      if (!inFence) { code += 1; blocks.push(0); }
+      blocks[blocks.length - 1] += line.length + 1;
+      inFence = !inFence;
+      return;
+    }
+    if (inFence) blocks[blocks.length - 1] += line.length + 1;
+    if (inFence || !/^\s*[-*+]\s+/.test(line)) return;
+    const bullet = line.replace(/^\s*[-*+]\s+/, '').trim();
+    const tick = bullet.match(/^`([^`]+)`\s*(?::\s*(.*))?$/);
+    const link = bullet.match(/^<?(https?:\/\/[^\s>]+?)>?\s*(?::\s+(.*))?$/);
+    const m = tick ?? link;
+    if (!m) {
+      problems.push(`"${bullet.slice(0, 60)}" is not a reference: write \`path\`: what must match`);
+      return;
+    }
+    const target = m[1].trim();
+    const match = (m[2] ?? '').trim();
+    const ref = { target, match };
+    if (/^https?:\/\//.test(target)) {
+      let host = '';
+      try {
+        host = new URL(target).hostname;
+      } catch { /* not a URL */ }
+      const ok = ATTACHMENT_HOSTS.includes(host) && (host !== 'github.com' || new URL(target).pathname.startsWith('/user-attachments/'));
+      Object.assign(ref, { kind: 'attachment', allowed: ok });
+    } else if (REPO_FILE_RE.test(target)) {
+      const [repo, ...rest] = target.split(':');
+      Object.assign(ref, { kind: 'repo-file', repo, path: rest.join(':') });
+    } else {
+      Object.assign(ref, { kind: 'path', path: target });
+    }
+    if (ref.path !== undefined && leavesRepository(ref.path)) {
+      problems.push(`"${target}" leaves the repository: use a path inside it`);
+      return;
+    }
+    if (match === '') problems.push(`"${target}" does not say what must match (structure, spacing, typography, colour, states)`);
+    references.push(ref);
+  });
+  return { present: true, references, code, blocks, problems };
+}
+
+export const INPUT_KINDS = ['file', 'link', 'secret', 'variable', 'manual'];
+const ENV_NAME_RE = /^[A-Za-z_][A-Za-z0-9_]*$/;
+
+/**
+ * The "External inputs" section: a bullet per input the work depends on, `- <kind>: <name>: <what it is for>`, with
+ * <kind> one of INPUT_KINDS. A name that has a colon or a slash (a path, `owner/repo:path`) is written in backticks.
+ *   file      a path of this repository, which must exist on the base branch when the build starts
+ *   link      `owner/repo:path` of a linked repository
+ *   secret    the name of a secret of the repository, in backticks; only its presence is ever checked
+ *   variable  the name of a variable of the repository, in backticks; only its presence is ever checked
+ *   manual    anything else that a person has to confirm (a key a customer must send, an account); it never blocks
+ * Returns { present, inputs: [{ kind, name, purpose, repo?, path? }], problems }.
+ */
+export function parseExternalInputs(body) {
+  const found = section(body, 'External inputs');
+  if (!found) return { present: false, inputs: [], problems: [] };
+  const inputs = [];
+  const problems = [];
+  let inFence = false;
+  found.text.split('\n').forEach((line) => {
+    if (FENCE_RE.test(line)) {
+      inFence = !inFence;
+      return;
+    }
+    if (inFence || !/^\s*[-*+]\s+/.test(line)) return;
+    const bullet = line.replace(/^\s*[-*+]\s+/, '').trim();
+    if (/^<.*>$/.test(bullet.split(':')[0].trim())) return; // the placeholder of the template is reported as template text
+    const head = bullet.match(/^([A-Za-z]+)\s*:\s*(.*)$/);
+    if (!head) {
+      problems.push(`"${bullet.slice(0, 60)}" is not an input: write kind: name: what it is for`);
+      return;
+    }
+    const kind = head[1].toLowerCase();
+    if (!INPUT_KINDS.includes(kind)) {
+      problems.push(`"${bullet.slice(0, 60)}" has the kind "${head[1]}", which does not exist: use ${INPUT_KINDS.join(', ')}`);
+      return;
+    }
+    const rest = head[2].trim();
+    // A name is written in backticks so that it is never mistaken for a value (the credential scan reads
+    // `secret: <long text>` as an assignment).
+    if ((kind === 'secret' || kind === 'variable') && !rest.startsWith('`')) {
+      problems.push(`"${bullet.slice(0, 60)}": write the name of a ${kind} in backticks, so that it is never mistaken for a value`);
+      return;
+    }
+    const parts = rest.match(/^`([^`]+)`\s*(?::\s*(.*))?$/) ?? rest.match(/^([^:]+?)\s*(?::\s*(.*))?$/);
+    const name = (parts?.[1] ?? '').trim();
+    const purpose = (parts?.[2] ?? '').trim();
+    if (name === '') {
+      problems.push(`"${bullet.slice(0, 60)}" has no name after the kind`);
+      return;
+    }
+    const input = { kind, name, purpose };
+    if (kind === 'file' && leavesRepository(name)) {
+      problems.push(`"${name}" leaves the repository: use a path inside it`);
+      return;
+    }
+    if (kind === 'link') {
+      if (!REPO_FILE_RE.test(name)) {
+        problems.push(`"${name}" is not owner/repo:path`);
+        return;
+      }
+      const [repo, ...path] = name.split(':');
+      Object.assign(input, { repo, path: path.join(':') });
+      if (leavesRepository(input.path)) {
+        problems.push(`"${name}" leaves the repository: use a path inside it`);
+        return;
+      }
+    }
+    if ((kind === 'secret' || kind === 'variable') && !ENV_NAME_RE.test(name)) {
+      problems.push(`"${name}" is not a valid ${kind} name: use letters, digits and underscores`);
+      return;
+    }
+    if (purpose === '') problems.push(`"${name}" does not say what it is for`);
+    inputs.push(input);
+  });
+  return { present: true, inputs, problems };
+}
+
+/**
+ * Returns {
+ *   scenarios: number,          // complete WHEN/THEN pairs
+ *   edgeCases: number,          // bullets under an "Edge cases" heading
+ *   dependsOn: number[],        // issue numbers of this repository from "Depends-on: #N" lines
+ *   dependsOnExternal: { repo, number }[],   // issues of other repositories from "Depends-on: owner/repo#N"
+ *   dependsOnInvalid: string[], // tokens of a Depends-on line that look like a repository but are not owner/repo#N
+ *   allowPaths: string[],       // paths and globs from "Allow-paths:" lines (dependency files the change may touch)
+ *   pattern: number|null,       // the issue of this repository named by a "Pattern: #N" line (the change to copy), or null
+ *   patternProblems: string[],  // a Pattern line that is not exactly one "#N" of this repository, or a second one
+ *   platform: string[],         // every name written on a "Platform:" line, in order (the platform the issue is for)
+ *   openQuestions: string[],    // the lines written under an "Open questions" heading (the template's comment and "none" excluded)
+ *   needsClarification: boolean,// the literal text NEEDS CLARIFICATION outside code blocks
+ *   decisionIds: string[],      // D1, D2... from "### D<n>. title" headings under "Decisions"
+ *   constraintIds: string[],    // C1, C2... from "- C<n>: text" bullets under "Constraints"
+ *   idProblems: string[],       // repeated or malformed decision and constraint ids
+ *   missing: string[],          // what the spec gate reports as absent
+ * }
+ */
+export function parseIssueBody(body) {
+  const lines = withoutCode(body);
+
+  const whens = lines.filter((l) => WHEN_RE.test(l)).length;
+  const thens = lines.filter((l) => THEN_RE.test(l)).length;
+  const scenarios = Math.min(whens, thens);
+
+  let edgeCases = 0;
+  let inEdge = false;
+  lines.forEach((line) => {
+    const heading = line.match(HEADING_RE);
+    if (heading) {
+      inEdge = EDGE_RE.test(heading[2]);
+      return;
+    }
+    if (inEdge && BULLET_RE.test(line)) edgeCases += 1;
+  });
+
+  // `#12` is an issue of this repository; `owner/repo#12` is an issue of another one. A token that looks like a
+  // repository but is not followed by `#number` (for example "acme/api 12") is invalid.
+  const dependsOn = [];
+  const dependsOnExternal = [];
+  const dependsOnInvalid = [];
+  lines.forEach((line) => {
+    const m = line.match(DEPENDS_RE);
+    if (!m) return;
+    [...m[1].matchAll(/(?:([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+))?#(\d+)/g)].forEach((ref) => {
+      const num = Number.parseInt(ref[2], 10);
+      if (ref[1]) {
+        if (!dependsOnExternal.some((d) => d.repo === ref[1] && d.number === num)) dependsOnExternal.push({ repo: ref[1], number: num });
+      } else if (!dependsOn.includes(num)) dependsOn.push(num);
+    });
+    const withoutRefs = m[1].replace(/(?:[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)?#\d+/g, ' ');
+    [...withoutRefs.matchAll(/[A-Za-z0-9_.:-]*[A-Za-z0-9_.-]+\/[A-Za-z0-9_./:-]+/g)].forEach((bad) => {
+      if (!dependsOnInvalid.includes(bad[0])) dependsOnInvalid.push(bad[0]);
+    });
+  });
+
+  // Dependency files the change may touch; comma separated, with or without backticks around each path.
+  const allowPaths = [];
+  lines.forEach((line) => {
+    const m = line.match(ALLOW_RE);
+    if (!m) return;
+    m[1].split(',').map((p) => p.trim().replace(/^`+|`+$/g, '').trim()).filter(Boolean).forEach((p) => {
+      if (!allowPaths.includes(p)) allowPaths.push(p);
+    });
+  });
+
+  // The platform(s) named by the issue; resolving them against relevo.yml is platform-of.mjs's job.
+  const platform = [];
+  lines.forEach((line) => {
+    const m = line.match(PLATFORM_RE);
+    if (!m) return;
+    m[1].split(',').map((p) => p.trim().replace(/^`+|`+$/g, '').trim()).filter(Boolean).forEach((p) => platform.push(p));
+  });
+
+  // `Pattern: #N`: one issue of this repository whose merged change is the template. Anything else is a problem and is not used.
+  let pattern = null;
+  const patternProblems = [];
+  lines.forEach((line) => {
+    const m = line.match(PATTERN_RE);
+    if (!m) return;
+    const value = m[1].trim().replace(/^`+|`+$/g, '').trim();
+    const ref = value.match(/^#(\d+)$/);
+    if (!ref) {
+      patternProblems.push(`"Pattern: ${value.slice(0, 40)}" is not one issue of this repository: write "Pattern: #N"`);
+    } else if (pattern !== null) {
+      patternProblems.push('the issue has more than one Pattern: line: name one');
+    } else {
+      pattern = Number.parseInt(ref[1], 10);
+    }
+  });
+  if (patternProblems.length > 0) pattern = null;
+
+  const none = /^(?:none|nothing|n\/a|ninguna?|nada|-)\.?$/i;
+  const openQuestions = String(section(body, 'Open questions')?.text ?? '')
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .split('\n')
+    .map((l) => l.trim())
+    .filter((l) => l !== '' && !none.test(l.replace(/^[-*+]\s+/, '')));
+  const needsClarification = lines.some((l) => /NEEDS CLARIFICATION/.test(l));
+
+  const idProblems = [];
+  const decisionIds = [];
+  String(section(body, 'Decisions')?.text ?? '').split('\n').forEach((line) => {
+    const h = line.match(/^###\s+(.*?)\s*$/);
+    if (!h) return;
+    const ok = h[1].match(/^(D\d+)\.\s+\S/);
+    if (ok) {
+      if (decisionIds.includes(ok[1])) idProblems.push(`the decision id ${ok[1]} is repeated`);
+      else decisionIds.push(ok[1]);
+    } else if (/^D(?:\d|[.:\s])/.test(h[1])) idProblems.push(`"### ${h[1]}" is not a decision: write "### D1. <title>"`);
+  });
+  const constraintIds = [];
+  String(section(body, 'Constraints')?.text ?? '').split('\n').forEach((line) => {
+    const b = line.match(/^\s*[-*+]\s+(C\d+)(.?)/);
+    if (!b) return;
+    if (b[2] !== ':') idProblems.push(`"${line.trim()}" is not a constraint: write "- ${b[1]}: <limit>"`);
+    else if (constraintIds.includes(b[1])) idProblems.push(`the constraint id ${b[1]} is repeated`);
+    else constraintIds.push(b[1]);
+  });
+
+  const missing = [];
+  if (scenarios === 0) missing.push('scenarios written as WHEN/THEN pairs');
+  if (edgeCases === 0) missing.push('edge cases (a list under an "Edge cases" heading)');
+
+  const design = parseDesign(body);
+  const codePointers = parseCodePointers(body);
+  const externalInputs = parseExternalInputs(body);
+  return { design, codePointers, externalInputs, scenarios, edgeCases, dependsOn, dependsOnExternal, dependsOnInvalid, allowPaths, pattern, patternProblems, platform, openQuestions, needsClarification, decisionIds, constraintIds, idProblems, missing };
+}

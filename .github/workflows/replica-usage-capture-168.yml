@@ -1,0 +1,46 @@
+# TEST ONLY (relevo #167 / PR #168): one cheap agent turn that launches three subagents named like replicas, to see how a real
+# execution log carries the Agent `description`, and to run run-usage.mjs (from .relevo-plugin-168) on that real log.
+# workflow_dispatch only. Costs a few cents of the subscription token each time it is started.
+name: replica-usage-capture-168
+on: workflow_dispatch
+permissions:
+  contents: read
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: agent
+        uses: anthropics/claude-code-action@v1
+        env:
+          CLAUDE_CODE_DISABLE_BACKGROUND_TASKS: '1'
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ github.token }}
+          prompt: >-
+            Launch exactly three subagents, one after another, with the Agent tool and subagent_type general-purpose.
+            The description parameter of the first must be exactly "replica 2.1", of the second exactly "replica 2.2", of the third
+            exactly "replica 2.2". The prompt of each is: Reply with the single word ok and use no tools.
+            When the three have answered, reply with the single word done.
+          claude_args: >-
+            --model haiku
+            --max-turns 10
+            --max-budget-usd 0.5
+            --allowedTools "Task,Agent"
+      - name: Show the Agent calls of the real log and run run-usage.mjs on it
+        env:
+          EXECUTION_FILE: ${{ steps.agent.outputs.execution_file }}
+        run: |
+          echo "--- Agent calls (only the keys of the input, and description/subagent_type/model)"
+          node -e '
+            const t = require("fs").readFileSync(process.env.EXECUTION_FILE, "utf8");
+            let all; try { all = JSON.parse(t); } catch { all = t.split("\n").filter(Boolean).map((l) => JSON.parse(l)); }
+            const calls = [];
+            all.forEach((e) => { if (e.type === "assistant" && Array.isArray(e.message?.content)) e.message.content.forEach((c) => { if (c?.type === "tool_use" && (c.name === "Agent" || c.name === "Task")) calls.push({ tool: c.name, id: c.id, keys: Object.keys(c.input ?? {}), description: c.input?.description, subagent_type: c.input?.subagent_type, model: c.input?.model }); }); });
+            console.log(JSON.stringify(calls, null, 1));
+            const started = all.filter((e) => e.type === "system" && e.subtype === "task_started").map((e) => ({ tool_use_id: e.tool_use_id, subagent_type: e.subagent_type, description: e.description }));
+            console.log("--- task_started"); console.log(JSON.stringify(started, null, 1));
+          '
+          echo "--- run-usage.mjs"
+          node .relevo-plugin-168/scripts/run-usage.mjs --file "$EXECUTION_FILE" --subscription

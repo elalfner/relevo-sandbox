@@ -1,0 +1,45 @@
+{
+  "name": "@elalfner/relevo",
+  "version": "0.14.5",
+  "description": "Relevo: an automatic issue-to-merge workflow where an agent builds and people verify.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Elias Alfaro",
+  "homepage": "https://github.com/elalfner/relevo",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/elalfner/relevo.git"
+  },
+  "keywords": [
+    "claude-code",
+    "claude-code-plugin",
+    "workflow",
+    "agents",
+    "openspec"
+  ],
+  "bin": {
+    "relevo": "scripts/cli.mjs"
+  },
+  "files": [
+    ".claude-plugin/plugin.json",
+    "scripts",
+    "skills",
+    "agents",
+    "stacks",
+    "knowledge",
+    "templates",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=20.19"
+  },
+  "scripts": {
+    "test": "node --test",
+    "validate:plugin": "claude plugin validate .",
+    "validate:spec": "openspec validate --all"
+  }
+}

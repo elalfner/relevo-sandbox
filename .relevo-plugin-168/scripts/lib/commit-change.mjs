@@ -1,0 +1,86 @@
+// One safe way to commit: name the files, check protected paths, scan the diff, and only then commit.
+// Implements "Safe commits" of the go specification and "Protected paths" of the security specification.
+//
+// `git(args) -> stdout` is injected so the logic can be tested; the command-line wrapper runs the real git.
+
+import { checkScope } from './platform-scope.mjs';
+import { checkProtected, formatViolations } from './protected-paths.mjs';
+import { BASE_PATTERNS, checkRestricted, formatRestricted } from './restricted-paths.mjs';
+import { formatFindings } from './scan.mjs';
+import { EXCEPTIONS_FILE, formatExceptionReport, scanWithExceptions } from './scan-exceptions.mjs';
+import { explicitStageArgs } from './staging.mjs';
+
+const restrictedViolations = (paths, list) => checkRestricted(paths, list).violations.map((v) => ({ ...v, tier: 'restricted' }));
+
+/**
+ * Stage `paths`, check them and commit only them.
+ *   message    the commit message
+ *   paths      the files or folders to commit, named one by one (never "." or "-A")
+ *   allow      globs from the `Allow-paths:` line of the issue (dependency files only)
+ *   rulesFile  the project rules file (`qa.rules_from`), which is never changed
+ *   platformPaths  the folders of the platforms below the root, whose skill folders are never changed either
+ *   within     the folder of the platform of the issue: files outside it are refused (`.` or null: no limit)
+ *   change     the change id, whose specification folder may always be committed
+ *   restricted the list of restricted files (`restrictedList(config)`); one in the paths ends in "restricted file in the diff"
+ *   allowEmpty when the named paths have no change, make an empty commit with the message instead of failing; only when nothing at all is staged
+ * Returns { ok, commit, findings, violations, exceptions: { applied, refused } } (the reviewed exceptions of .relevo/scan-exceptions.json at HEAD). When something is found nothing is committed and the named paths
+ * are unstaged again (files that were staged for other reasons stay staged).
+ */
+export function commitChange({ git, message, paths, allow = [], rulesFile = null, platformPaths = [], within = null, change = null, restricted = BASE_PATTERNS, allowEmpty = false }) {
+  if (!String(message ?? '').trim()) throw new Error('give a commit message');
+  const addArgs = explicitStageArgs(paths);
+
+  // A path that is protected, or restricted, is refused before anything is staged.
+  const named = checkProtected(paths, { allow, rulesFile, platformPaths });
+  const namedRestricted = restrictedViolations(paths, restricted);
+  if (namedRestricted.length > 0) return { ok: false, commit: null, findings: [], violations: [...namedRestricted, ...named.violations.filter((v) => v.tier === 'hard')] };
+  if (named.violations.some((v) => v.tier === 'hard')) return { ok: false, commit: null, findings: [], violations: named.violations };
+
+  git(addArgs);
+  const unstage = () => git(['reset', '-q', '--', ...paths]);
+
+  // The folders named above may hold protected files: check what is really staged under them.
+  const staged = git(['diff', '--cached', '--name-only', '--', ...paths]).split('\n').filter(Boolean);
+  // A restricted file under a named folder is found by its name, and its content is never scanned or printed.
+  const stagedRestricted = restrictedViolations(staged, restricted);
+  if (stagedRestricted.length > 0) {
+    unstage();
+    return { ok: false, commit: null, findings: [], violations: stagedRestricted };
+  }
+  const violations = [
+    ...checkProtected(staged, { allow, rulesFile, platformPaths }).violations,
+    ...checkScope(staged, { within, change, allow }).violations,
+  ];
+  // The reviewed exceptions are read from the last commit, never from the working tree, which an unattended run can change.
+  let exceptionsText = null;
+  try { exceptionsText = git(['show', `HEAD:${EXCEPTIONS_FILE}`]); } catch { /* no list, or no commit yet: nothing is excused */ }
+  const { findings, applied, refused } = scanWithExceptions(git(['diff', '--cached', '-U0', '--', ...paths]), exceptionsText);
+  const exceptions = { applied, refused };
+  if (violations.length > 0 || findings.length > 0) {
+    unstage();
+    return { ok: false, commit: null, findings, violations, exceptions };
+  }
+  if (staged.length === 0) {
+    if (!allowEmpty) throw new Error('nothing to commit: none of the named paths has changes');
+    // An empty commit takes whatever else is staged, so it is made only when the index is empty.
+    if (git(['diff', '--cached', '--name-only']).trim()) throw new Error('nothing to commit in the named paths, and other files are staged');
+    git(['commit', '-q', '--allow-empty', '-m', message]);
+    return { ok: true, commit: git(['rev-parse', '--short', 'HEAD']).trim(), findings: [], violations: [], exceptions };
+  }
+
+  // `--` with paths commits only those paths, so files staged for another reason are left alone.
+  git(['commit', '-q', '-m', message, '--', ...paths]);
+  return { ok: true, commit: git(['rev-parse', '--short', 'HEAD']).trim(), findings: [], violations: [], exceptions };
+}
+
+/** The lines to print when a commit was refused. Never contains a secret. */
+export function refusalText({ findings, violations, exceptions }) {
+  const lines = [];
+  const restricted = violations.filter((v) => v.tier === 'restricted');
+  const others = violations.filter((v) => v.tier !== 'restricted');
+  if (restricted.length > 0) lines.push(formatRestricted(restricted));
+  if (others.length > 0) lines.push(formatViolations(others));
+  if (findings.length > 0) lines.push(formatFindings(findings));
+  if (exceptions && exceptions.refused.length > 0) lines.push(formatExceptionReport({ refused: exceptions.refused }));
+  return lines.join('\n');
+}
