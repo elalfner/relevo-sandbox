@@ -56,3 +56,7 @@ labels:
   needs-spec: relevo167:needs-spec
   blocked: relevo167:blocked
   qa-failed: relevo167:qa-failed
+
+agents:
+  dev:
+    model: auto      # TEST ONLY (relevo#167 check 3): replicas pick the model below the developer on agents.ladder
