@@ -1,6 +1,6 @@
 ## 1. Buttons
 
-- [ ] 1.1 Add the "Add 20", "Add 30" and "Add 40" buttons to the home screen in `lib/main.dart`, each adding its number to the counter
+- [x] 1.1 Add the "Add 20", "Add 30" and "Add 40" buttons to the home screen in `lib/main.dart`, each adding its number to the counter
 
 ## 2. Tests
 
