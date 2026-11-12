@@ -2,11 +2,17 @@
 # execution log carries the Agent `description`, and to run run-usage.mjs (from .relevo-plugin-168) on that real log.
 # workflow_dispatch only. Costs a few cents of the subscription token each time it is started.
 name: replica-usage-capture-168
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+  push:
+    branches: [test/replica-usage-168]
+    paths: ['.github/workflows/replica-usage-capture-168.yml']
 permissions:
   contents: read
 jobs:
   capture:
+    # A push only registers the workflow, so that it can be dispatched: the job does nothing then.
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
