@@ -4,7 +4,7 @@
 
 ## 1. Buttons
 
-- [ ] 1.1 [replica] Add 20 button, with its widget test
+- [x] 1.1 [replica] Add 20 button, with its widget test
   - Rename: Add 10 -> Add 20, add-ten -> add-twenty, _addTen -> _addTwenty, add_ten -> add_twenty, 10 -> 20
   - Differences: none
 - [ ] 1.2 [replica] Add 30 button, with its widget test
