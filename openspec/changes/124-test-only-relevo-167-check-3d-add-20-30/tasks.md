@@ -12,7 +12,7 @@
 
 ## 2. Add 30 button
 
-- [ ] 2.1 [replica] Add 30 button, with its widget test; verify with `flutter test test/add_thirty_test.dart`
+- [x] 2.1 [replica] Add 30 button, with its widget test; verify with `flutter test test/add_thirty_test.dart`
   - Rename: Add 10 -> Add 30, add-ten-button -> add-thirty-button, _addTen -> _addThirty, adds 10 -> adds 30, add_ten -> add_thirty, addTen -> addThirty, += 10 -> += 30, '10' -> '30', '13' -> '33'
   - Differences: the existing buttons stay in lib/main.dart; the new button goes below the last one; the test goes in a new file test/add_thirty_test.dart
 
