@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import 'widgets/reset_confirm_dialog.dart';
+
 const String appVersion = 'v1.0.0';
+
+/// Counter value from which resetting asks for confirmation.
+const int resetConfirmThreshold = 10;
 
 void main() {
   runApp(const MyApp());
@@ -105,7 +110,13 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void _resetCounter() {
+  /// Resets the counter at once below [resetConfirmThreshold]; from there on
+  /// it asks first and resets only when the person confirms.
+  Future<void> _resetCounter() async {
+    if (_counter >= resetConfirmThreshold) {
+      final confirmed = await ResetConfirmDialog.show(context, _counter);
+      if (!confirmed || !mounted) return;
+    }
     setState(() => _counter = 0);
   }
 
