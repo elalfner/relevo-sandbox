@@ -27,7 +27,7 @@ review:
 
 limits:
   built_unreviewed_per_person: 1   # built issues one person may have waiting
-  concurrent_agents: 3             # unattended runs at the same time
+  concurrent_agents: 1             # unattended runs at the same time
   review_sla_hours: 8              # reminder, then escalation after the same time again
   run_max_turns: 100               # per unattended run
   run_max_cost: 5                  # REQUIRED: US dollars per unattended run; choose your own
@@ -39,7 +39,7 @@ qa:
 evidence:
   policy: attach_to_pr             # attach_to_pr | local_only (use for sensitive data)
 
-language: en                       # language of hand-off messages (en, es)
+language: es                       # language of hand-off messages (en, es)
 trust: private-team                # private-team | public
 
 # Rename any label here; keys are fixed, names are yours.

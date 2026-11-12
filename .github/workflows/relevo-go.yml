@@ -88,6 +88,13 @@ jobs:
             [ -f ".relevo-plugin/$f" ] || { echo "::error::The Relevo package $RELEVO_VERSION lacks $f"; exit 1; }
           done
 
+      # TEST ONLY (relevo#160): makes the light job fail for one issue, to see the comment of a run that failed before it decided.
+      - name: Fail on purpose for the test issue
+        if: inputs.issue == '104'
+        run: |
+          echo "::error::failing on purpose (relevo#160 test)"
+          exit 1
+
       # Applies the gates and, when the decision is `start`, claims the issue (relevo:building). Any other decision
       # (needs-spec, blocked, queued, denied, no milestone, no assignee) is applied here with its comment.
       - name: Gates and claim
