@@ -12,5 +12,5 @@
 
 ## 3. Double button
 
-- [ ] 3.1 Add the "Double" button (key `double-button`) that doubles the counter in `lib/main.dart`; verify with the test of 3.2
-- [ ] 3.2 Add a widget test: counter 6, tap "Double", counter shows 12 and the parity text shows "Even" and the greeting is shown; run `flutter analyze` and `flutter test`, both pass
+- [x] 3.1 Add the "Double" button (key `double-button`) that doubles the counter in `lib/main.dart`; verify with the test of 3.2
+- [x] 3.2 Add a widget test: counter 6, tap "Double", counter shows 12 and the parity text shows "Even" and the greeting is shown; run `flutter analyze` and `flutter test`, both pass
