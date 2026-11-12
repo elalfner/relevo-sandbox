@@ -2,8 +2,6 @@
 # elalfner/relevo (pull request 166) against issue 112 with a synthetic usage-limit log. No model runs, no quota is used.
 name: limit-retry-test
 on:
-  push:
-    branches: [test/usage-limit-retry-118]
   workflow_dispatch:
 permissions:
   contents: read

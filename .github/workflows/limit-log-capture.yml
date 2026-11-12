@@ -1,0 +1,55 @@
+# TEST ONLY, lives on the branch test/usage-limit-retry-118. One agent turn, no tools, to capture the real rate-limit events
+# of the execution log (field names, units, windows) for elalfner/relevo pull request 166. Prints only those events.
+name: limit-log-capture
+on:
+  push:
+    branches: [test/usage-limit-retry-118]
+    paths: ['.github/workflows/limit-log-capture.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PACKAGE_SHA: c4c27b859c602ef89e582c5427402a14b2f10003
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - id: agent
+        uses: anthropics/claude-code-action@v1
+        env:
+          CLAUDE_CODE_DISABLE_BACKGROUND_TASKS: '1'
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ github.token }}
+          allowed_bots: github-actions
+          prompt: Reply with the single word OK. Do not use any tool.
+          claude_args: >-
+            --max-turns 1
+            --max-budget-usd 0.5
+            --disallowedTools "Bash,Read,Write,Edit,Glob,Grep,Task,WebFetch,WebSearch"
+
+      - name: Print the rate-limit events and run the scripts of the pull request on this log
+        if: always()
+        env:
+          EXECUTION_FILE: ${{ steps.agent.outputs.execution_file }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/pkg"
+          curl -fsSL "https://codeload.github.com/elalfner/relevo/tar.gz/$PACKAGE_SHA" | tar -xz --strip-components=1 -C "$RUNNER_TEMP/pkg"
+          echo "execution file: ${EXECUTION_FILE:-none}"
+          [ -n "$EXECUTION_FILE" ] && [ -f "$EXECUTION_FILE" ] || exit 0
+          echo "::group::rate_limit_event entries, raw"
+          node -e '
+            const t = require("fs").readFileSync(process.argv[1], "utf8").trim();
+            let all; try { const w = JSON.parse(t); all = Array.isArray(w) ? w : [w]; } catch { all = t.split("\n").map((l) => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean); }
+            console.log("entries:", all.length, "types:", [...new Set(all.map((e) => e.type + (e.subtype ? "/" + e.subtype : "")))].join(", "));
+            all.filter((e) => e.type === "rate_limit_event").forEach((e) => console.log(JSON.stringify(e)));
+            const r = [...all].reverse().find((e) => e.type === "result");
+            if (r) console.log("result:", JSON.stringify({ subtype: r.subtype, is_error: r.is_error, num_turns: r.num_turns, total_cost_usd: r.total_cost_usd }));' "$EXECUTION_FILE"
+          echo "::endgroup::"
+          echo "::group::the scripts of the pull request on this log"
+          node "$RUNNER_TEMP/pkg/scripts/run-usage.mjs" --file "$EXECUTION_FILE" --subscription
+          node "$RUNNER_TEMP/pkg/scripts/usage-limit.mjs" --file "$EXECUTION_FILE"; echo "usage-limit exit: $?"
+          echo "::endgroup::"
