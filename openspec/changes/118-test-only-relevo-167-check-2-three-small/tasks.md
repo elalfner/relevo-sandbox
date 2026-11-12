@@ -7,8 +7,8 @@
 
 ## 2. Subtract 1 button
 
-- [ ] 2.1 Add the "Subtract 1" button (key `subtract-one-button`) that subtracts 1 from the counter in `lib/main.dart`; verify with the test of 2.2
-- [ ] 2.2 Add a widget test: counter 7, tap "Subtract 1", counter shows 6 and the parity text shows "Even" and the greeting is shown; `flutter test` passes
+- [x] 2.1 Add the "Subtract 1" button (key `subtract-one-button`) that subtracts 1 from the counter in `lib/main.dart`; verify with the test of 2.2
+- [x] 2.2 Add a widget test: counter 7, tap "Subtract 1", counter shows 6 and the parity text shows "Even" and the greeting is shown; `flutter test` passes
 
 ## 3. Double button
 
