@@ -6,7 +6,7 @@
 
 ## 1. Add 20 button
 
-- [ ] 1.1 [replica] Add 20 button, with its widget test; verify with `flutter test test/add_twenty_test.dart`
+- [x] 1.1 [replica] Add 20 button, with its widget test; verify with `flutter test test/add_twenty_test.dart`
   - Rename: Add 10 -> Add 20, add-ten-button -> add-twenty-button, _addTen -> _addTwenty, adds 10 -> adds 20, add_ten -> add_twenty, addTen -> addTwenty, += 10 -> += 20, '10' -> '20', '13' -> '23'
   - Differences: the existing Add 10 button stays in lib/main.dart; the new button goes below it; the test goes in a new file test/add_twenty_test.dart
 

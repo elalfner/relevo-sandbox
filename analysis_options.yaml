@@ -29,5 +29,8 @@ linter:
 
 # TEST ONLY (relevo#167): the toolchain of the runner flags package:flutter/material.dart as deprecated, which made the gate fail on the base itself
 analyzer:
+  exclude:
+    - build/**
+    - android/**
   errors:
     deprecated_member_use: ignore
