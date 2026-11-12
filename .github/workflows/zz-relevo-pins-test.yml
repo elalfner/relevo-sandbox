@@ -1,0 +1,96 @@
+name: zz-relevo-pins-test
+# Temporary test of the steps of relevo-go.yml (issue #132): the cache steps copied from the template, no agent.
+on:
+  push:
+    branches: [test/workflow-pins-132]
+env:
+  OPENSPEC_VERSION: '1.14.3'
+  BUN_VERSION: '1.4.4'
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          package-manager-cache: false
+
+      # The tools that the build downloads are kept in the cache, under a key that names the pinned version, the operating
+      # system and the architecture, so raising a pin installs and caches the new one and restores nothing of the old one. A
+      # cache is restored first and saved by its own step right after the install and BEFORE the agent starts: a cache that
+      # a post step saved when the job ends would hold whatever the agent (which has Bash) left in those files. Nothing is
+      # saved after the agent. If the cache service cannot be reached the tools are installed as before.
+      - name: Restore OpenSpec from the cache
+        id: openspec_cache
+        continue-on-error: true
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/openspec
+          key: openspec-${{ env.OPENSPEC_VERSION }}-${{ runner.os }}-${{ runner.arch }}
+
+      - name: Install OpenSpec
+        # After a restore npm only checks that the pinned version is there; without one it installs it.
+        # Under the temporary folder of the job, at the pinned version: nothing global is left on a runner that persists.
+        run: |
+          npm install --prefix "$RUNNER_TEMP/openspec" "@fission-ai/openspec@$OPENSPEC_VERSION" --no-fund --no-audit
+          echo "$RUNNER_TEMP/openspec/node_modules/.bin" >> "$GITHUB_PATH"
+        env:
+          OPENSPEC_TELEMETRY: '0'
+
+      - name: Save OpenSpec to the cache
+        if: steps.openspec_cache.outputs.cache-hit != 'true'
+        continue-on-error: true
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/openspec
+          key: openspec-${{ env.OPENSPEC_VERSION }}-${{ runner.os }}-${{ runner.arch }}
+
+      # Bun is what claude-code-action runs on. The action downloads it on every run (it turns its own cache off), so the job
+      # installs the pinned version itself and gives the action its path (path_to_bun_executable). The binary that comes out
+      # of the cache must report BUN_VERSION or the job stops here, before the agent.
+      - name: Restore Bun from the cache
+        id: bun_cache
+        continue-on-error: true
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/bun/bun
+          key: bun-${{ env.BUN_VERSION }}-${{ runner.os }}-${{ runner.arch }}
+
+      - name: Install Bun
+        id: bun_install
+        if: steps.bun_cache.outputs.cache-hit != 'true'
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+          # The cache of this action would be saved when the job ends, after the agent: it is off, and the step below saves it.
+          no-cache: true
+
+      - name: Check the version of Bun
+        id: bun
+        env:
+          BUN_INSTALLED: ${{ steps.bun_install.outputs.bun-path }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/bun"
+          [ -z "$BUN_INSTALLED" ] || cp "$BUN_INSTALLED" "$RUNNER_TEMP/bun/bun"
+          chmod +x "$RUNNER_TEMP/bun/bun"
+          actual=$("$RUNNER_TEMP/bun/bun" --version)
+          [ "$actual" = "$BUN_VERSION" ] || { echo "::error::Bun reports version $actual but the workflow pins $BUN_VERSION"; exit 1; }
+          echo "path=$RUNNER_TEMP/bun/bun" >> "$GITHUB_OUTPUT"
+
+      - name: Save Bun to the cache
+        if: steps.bun_cache.outputs.cache-hit != 'true'
+        continue-on-error: true
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/bun/bun
+          key: bun-${{ env.BUN_VERSION }}-${{ runner.os }}-${{ runner.arch }}
+
+      - name: Report
+        run: |
+          echo "bun: $("$RUNNER_TEMP/bun/bun" --version)"
+          echo "openspec: $(openspec --version)"
+          echo "bun path output: ${{ steps.bun.outputs.path }}"
