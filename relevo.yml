@@ -46,3 +46,8 @@ trust: private-team                # private-team | public
 # labels:
 #   ready: relevo:ready
 #   built: relevo:built
+
+# TEST ONLY (relevo#167 check 3): the agent reads this file from the branch of the issue, so the developer on auto is set here
+agents:
+  dev:
+    model: auto
