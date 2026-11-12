@@ -458,11 +458,11 @@ jobs:
         with:
           # Credentials: choose ONE of the next two lines.
           # a) API key (default):
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           # b) Subscription: create a token with `claude setup-token` and store it as the secret CLAUDE_CODE_OAUTH_TOKEN.
           #    The command prints the token over two lines; remove all whitespace before storing it, for example
           #    `pbpaste | tr -d '[:space:]' | gh secret set CLAUDE_CODE_OAUTH_TOKEN`. Then replace the line above with:
-          # claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ github.token }}
           # The action downloads Bun again on every run unless it is given one: this is the pinned and cached one that the step
           # "Check the version of Bun" verified.
