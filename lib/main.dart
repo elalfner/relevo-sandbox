@@ -105,6 +105,10 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  void _addTen() {
+    setState(() => _counter += 10);
+  }
+
   void _resetCounter() {
     setState(() => _counter = 0);
   }
@@ -198,6 +202,11 @@ class _MyHomePageState extends State<MyHomePage> {
                 key: const Key('reset-button'),
                 onPressed: _resetCounter,
                 child: const Text('Reset'),
+              ),
+              TextButton(
+                key: const Key('add-ten-button'),
+                onPressed: _addTen,
+                child: const Text('Add 10'),
               ),
             ],
           ),
