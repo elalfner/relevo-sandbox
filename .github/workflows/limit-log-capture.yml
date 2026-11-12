@@ -2,9 +2,6 @@
 # of the execution log (field names, units, windows) for elalfner/relevo pull request 166. Prints only those events.
 name: limit-log-capture
 on:
-  push:
-    branches: [test/usage-limit-retry-118]
-    paths: ['.github/workflows/limit-log-capture.yml']
   workflow_dispatch:
 permissions:
   contents: read
