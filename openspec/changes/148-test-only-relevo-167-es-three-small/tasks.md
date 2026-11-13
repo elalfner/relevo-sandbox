@@ -2,8 +2,8 @@
 
 ## 1. Add 31 button
 
-- [ ] 1.1 Add the "Add 31" button (key `add-thirty-one-button`) to the home screen in `lib/main.dart` and verify it adds 31 to the counter
-- [ ] 1.2 Add `test/add_thirty_one_test.dart` covering counter 0 -> 31 and counter 3 -> 34, and verify `flutter test` passes
+- [x] 1.1 Add the "Add 31" button (key `add-thirty-one-button`) to the home screen in `lib/main.dart` and verify it adds 31 to the counter
+- [x] 1.2 Add `test/add_thirty_one_test.dart` covering counter 0 -> 31 and counter 3 -> 34, and verify `flutter test` passes
 
 ## 2. Add 33 button
 
