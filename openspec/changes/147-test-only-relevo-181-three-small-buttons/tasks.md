@@ -7,8 +7,8 @@
 
 ## 2. Add 23 button
 
-- [ ] 2.1 Add the "Add 23" button (key `add-23-button`) to the home screen in `lib/main.dart`; verify by running the app tests
-- [ ] 2.2 Widget test: from 0 shows 23, from 3 shows 26; verify `flutter test` passes
+- [x] 2.1 Add the "Add 23" button (key `add-23-button`) to the home screen in `lib/main.dart`; verify by running the app tests
+- [x] 2.2 Widget test: from 0 shows 23, from 3 shows 26; verify `flutter test` passes
 
 ## 3. Add 25 button
 
