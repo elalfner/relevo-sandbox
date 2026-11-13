@@ -1,12 +1,12 @@
-# TEST ONLY (relevo #167 / PR #168): one cheap agent turn that launches three subagents named like replicas, to see how a real
-# execution log carries the Agent `description`, and to run run-usage.mjs (from .relevo-plugin-168) on that real log.
+# TEST ONLY (relevo #169): main agent on sonnet launching three haiku subagents named like replicas, to check that run-usage.mjs estimates their cost from a real
+# log (the main agent uses a model that the replicas do not).
 # workflow_dispatch only. Costs a few cents of the subscription token each time it is started.
-name: replica-usage-capture-168
+name: replica-usage-capture-169
 on:
   workflow_dispatch:
   push:
-    branches: [test/replica-usage-168]
-    paths: ['.github/workflows/replica-usage-capture-168.yml']
+    branches: [test/replica-cost-169]
+    paths: ['.github/workflows/replica-usage-capture-169.yml']
 permissions:
   contents: read
 jobs:
@@ -30,7 +30,7 @@ jobs:
             exactly "replica 2.2". Pass the parameter model with the value "haiku" in each call. The prompt of each is: Reply with the single word ok and use no tools.
             When the three have answered, reply with the single word done.
           claude_args: >-
-            --model haiku
+            --model sonnet
             --max-turns 10
             --max-budget-usd 0.5
             --allowedTools "Task,Agent"
@@ -59,4 +59,4 @@ jobs:
             console.log(JSON.stringify(all.filter((e) => e.type === "result").map((e) => ({ subagent_stats: e.subagent_stats, since: e.model_usage_since_last_result }))));
           '
           echo "--- run-usage.mjs"
-          node .relevo-plugin-168/scripts/run-usage.mjs --file "$EXECUTION_FILE" --subscription
+          node .relevo-plugin-169/scripts/run-usage.mjs --file "$EXECUTION_FILE" --subscription

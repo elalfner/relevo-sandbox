@@ -122,6 +122,35 @@ function breakdown(all, result) {
     });
     return any ? total : null;
   };
+  // The runner of a cloud run keeps the messages of the main agent only (#169): no message has the `parent_tool_use_id` of a
+  // subagent, and the `task_notification` has `total_tokens` but no cost. Then a subagent is priced from the real cost of its
+  // model in `modelUsage`, shared by the `total_tokens` of the subagents on that model. This is an estimate (the tokens are
+  // not weighted by the price of cache reads), and it is made only when the split is not a guess: no message of any subagent
+  // is in the log, the model is not one that the main agent used, every subagent is on a model that the log can name, and
+  // the subagents of that model are all replicas or none is.
+  const hasSubagentMessages = [...weights.keys()].some((agent) => agent !== '');
+  const isReplicaLaunch = (id) => REPLICA_LAUNCH.test(typeof calls.get(id)?.description === 'string' ? calls.get(id).description.trim() : '');
+  const modelKeyOf = (id) => {
+    const alias = calls.get(id)?.model;
+    if (typeof alias !== 'string' || !alias.trim()) return null;
+    const exact = models.find((m) => m.model === alias);
+    if (exact) return exact.model;
+    const named = models.filter((m) => m.model.toLowerCase().includes(alias.trim().toLowerCase()));
+    return named.length === 1 ? named[0].model : null;
+  };
+  const tokensOf = (id) => num(done.get(id)?.total_tokens);
+  const costByTokens = (id) => {
+    if (hasSubagentMessages || models.length === 0) return null;
+    const key = modelKeyOf(id);
+    if (key === null || weights.get('')?.has(key)) return null;
+    const ids = [...done.keys()];
+    if (ids.some((other) => modelKeyOf(other) === null)) return null;
+    const group = ids.filter((other) => modelKeyOf(other) === key);
+    if (group.some((other) => isReplicaLaunch(other) !== isReplicaLaunch(id) || !(tokensOf(other) > 0))) return null;
+    const total = group.reduce((sum, other) => sum + tokensOf(other), 0);
+    return models.find((m) => m.model === key).cost * (tokensOf(id) / total);
+  };
+  const subagentCost = (id) => costOf(id) ?? costByTokens(id);
   const clean = (o) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== null && v !== undefined));
 
   const agents = [clean({ name: 'main', model: modelOfAgent.get('')?.model ?? null, turns: num(result.num_turns), cost: costOf('') })];
@@ -135,7 +164,7 @@ function breakdown(all, result) {
       t.attempts += 1;
       t.turns += usage.tool_uses + 1;
       if (num(usage.duration_ms) !== null) t.seconds += Math.round(usage.duration_ms / 1000);
-      const cost = costOf(id);
+      const cost = subagentCost(id);
       if (cost === null) t.costKnown = false;
       else t.cost += cost;
       t.model = modelOfAgent.get(id)?.model ?? (typeof call.model === 'string' ? call.model : t.model);
@@ -149,7 +178,7 @@ function breakdown(all, result) {
       effort: typeof call.effort === 'string' ? call.effort : null,
       turns: usage.tool_uses + 1,
       seconds: num(usage.duration_ms) !== null ? Math.round(usage.duration_ms / 1000) : null,
-      cost: costOf(id),
+      cost: subagentCost(id),
     }));
   });
   const replicas = [...byTarget.values()].map(({ costKnown, cost, seconds, ...t }) => clean({ ...t, seconds: seconds || null, cost: costKnown ? cost : null }));
@@ -189,6 +218,36 @@ export function readUsage(text) {
   if (detail.models) usage.models = detail.models;
   if (detail.agents) usage.agents = detail.agents;
   if (detail.replicas) usage.replicas = detail.replicas;
+  return usage;
+}
+
+/**
+ * The reason that the model of each replica was chosen with, from `replica-models.json` of the progress folder (`replica-plan.mjs
+ * model --task <id>` appends one record per launch): { <task id>: <reason> }, the last record of each task. It is read as data: a
+ * record that is not well formed is skipped, line breaks and comment marks are taken out (the reason goes inside the hidden marker
+ * of a comment) and a long one is cut. Text that is not JSON gives nothing.
+ */
+export function replicaReasonsFromJson(text) {
+  let records;
+  try {
+    records = JSON.parse(text);
+  } catch {
+    return {};
+  }
+  if (!Array.isArray(records)) return {};
+  const reasons = {};
+  records.forEach((r) => {
+    if (!r || typeof r.task !== 'string' || typeof r.why !== 'string') return;
+    const why = r.why.replace(/<!--|-->/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 240).trim();
+    if (why) reasons[r.task] = why;
+  });
+  return reasons;
+}
+
+/** The figures with `why` on each replica that has a reason (the targets without one stay as they were). */
+export function withReplicaReasons(usage, reasons) {
+  if (!usage?.replicas?.length || !reasons) return usage;
+  usage.replicas = usage.replicas.map((r) => (typeof reasons[r.id] === 'string' ? { ...r, why: reasons[r.id] } : r));
   return usage;
 }
 
@@ -342,7 +401,7 @@ export function usageLine(usage, { subscription = false, limits = null, plan = n
   const agent = (a) => `${a.name}${a.model ? ` (${a.model}${a.effort ? `, ${a.effort}` : ''})` : ''} ${turns(a.turns)}${a.seconds ? t('minutes', { n: (a.seconds / 60).toFixed(1) }) : ''}${a.cost !== undefined ? t('agent_cost', { cost: a.cost.toFixed(2) }) : ''}`;
   const byAgent = usage.agents?.length ? t('by_agent', { list: usage.agents.map(agent).join('; ') }) : '';
   const attempts = (n) => t(n === 1 ? 'attempt_one' : 'attempt_many', { n });
-  const replica = (r) => t('replica_item', { id: r.id, model: r.model ? ` (${r.model})` : '', attempts: attempts(r.attempts), turns: turns(r.turns), cost: r.cost !== undefined ? t('agent_cost', { cost: r.cost.toFixed(2) }) : '' });
+  const replica = (r) => t('replica_item', { id: r.id, model: r.model ? ` (${r.model})` : '', attempts: attempts(r.attempts), turns: turns(r.turns), cost: r.cost !== undefined ? t('agent_cost', { cost: r.cost.toFixed(2) }) : '', why: r.why ? t('replica_why', { why: r.why }) : '' });
   // The total of the replicas and the rest of the run are said only when every figure is there; nothing is estimated.
   const replicaCost = usage.replicas?.length && usage.replicas.every((r) => r.cost !== undefined) ? usage.replicas.reduce((total, r) => total + r.cost, 0) : null;
   const byReplicas = usage.replicas?.length
@@ -435,8 +494,8 @@ export function parseUsageMarker(comment) {
     if (good) run.agents = data.agents.map(({ name, model, effort, turns, seconds, cost }) => ({ name, turns, ...(model !== undefined ? { model } : {}), ...(effort !== undefined ? { effort } : {}), ...(seconds !== undefined ? { seconds } : {}), ...(cost !== undefined ? { cost } : {}) }));
   }
   if (Array.isArray(data.replicas) && data.replicas.length && data.replicas.every((r) => r && typeof r.id === 'string' && Number.isInteger(r.attempts) && num(r.turns) !== null
-    && (r.model === undefined || typeof r.model === 'string') && (r.seconds === undefined || num(r.seconds) !== null) && (r.cost === undefined || num(r.cost) !== null))) {
-    run.replicas = data.replicas.map(({ id, model, attempts, turns, seconds, cost }) => ({ id, attempts, turns, ...(model !== undefined ? { model } : {}), ...(seconds !== undefined ? { seconds } : {}), ...(cost !== undefined ? { cost } : {}) }));
+    && (r.model === undefined || typeof r.model === 'string') && (r.seconds === undefined || num(r.seconds) !== null) && (r.cost === undefined || num(r.cost) !== null) && (r.why === undefined || typeof r.why === 'string'))) {
+    run.replicas = data.replicas.map(({ id, model, attempts, turns, seconds, cost, why }) => ({ id, attempts, turns, ...(model !== undefined ? { model } : {}), ...(seconds !== undefined ? { seconds } : {}), ...(cost !== undefined ? { cost } : {}), ...(why !== undefined ? { why } : {}) }));
   }
   if (Array.isArray(data.models) && data.models.length && data.models.every((m) => m && typeof m.model === 'string' && num(m.cost) !== null)) {
     run.models = data.models.map((m) => ({ model: m.model, cost: m.cost }));

@@ -82,11 +82,12 @@ export const CATALOG = {
       '{{qa_notes_marker}}',
     ],
     qa_failed: [
-      '@{{assignee}} #{{issue}} "{{title}}" failed QA ❌',
+      '@{{assignee}} #{{issue}} "{{title}}" {{headline}}',
       '',
       'What happened: {{happened}}',
       'Finding: {{finding}}{{location_suffix}}',
       '{{class_line}}',
+      '{{contradiction_line}}',
       '{{branch_line}}',
       'Full QA report: {{log_url}}',
       '{{next_line}}',
@@ -187,7 +188,7 @@ export const CATALOG = {
       '#{{issue}} "{{title}}" is queued',
       '',
       'The limit of concurrent agents is reached. It starts automatically when a run finishes.',
-      'Running now: {{active_text}}',
+      'Running or starting now: {{active_text}}',
       'Ahead of it in the queue: {{ahead_text}}',
       'Recent builds: {{typical_text}}',
       'These figures are read when the issue is queued; they are not updated while it waits.',
@@ -271,11 +272,12 @@ export const CATALOG = {
       '{{qa_notes_marker}}',
     ],
     qa_failed: [
-      '@{{assignee}} #{{issue}} "{{title}}" no pasó QA ❌',
+      '@{{assignee}} #{{issue}} "{{title}}" {{headline}}',
       '',
       'Qué pasó: {{happened}}',
       'Hallazgo: {{finding}}{{location_suffix}}',
       '{{class_line}}',
+      '{{contradiction_line}}',
       '{{branch_line}}',
       'Reporte completo de QA: {{log_url}}',
       '{{next_line}}',
@@ -376,7 +378,7 @@ export const CATALOG = {
       '#{{issue}} "{{title}}" está en cola',
       '',
       'Se alcanzó el límite de agentes simultáneos. Empieza solo cuando termine una ejecución.',
-      'En ejecución ahora: {{active_text}}',
+      'En ejecución o por arrancar ahora: {{active_text}}',
       'Delante en la cola: {{ahead_text}}',
       'Construcciones recientes: {{typical_text}}',
       'Estas cifras se leen cuando el issue entra en la cola; no se actualizan mientras espera.',
@@ -460,7 +462,8 @@ export const USAGE_TEXT = {
     minutes: ', {{n}} min',
     agent_cost: ', about ${{cost}}',
     by_replicas: ' Replicas: {{list}}.',
-    replica_item: '{{id}}{{model}} {{attempts}}, {{turns}}{{cost}}',
+    replica_item: '{{id}}{{model}} {{attempts}}, {{turns}}{{cost}}{{why}}',
+    replica_why: ', because {{why}}',
     attempt_one: '{{n}} attempt',
     attempt_many: '{{n}} attempts',
     replicas_total: ' Replicas together about ${{replicas}}, the rest of the run about ${{rest}}.',
@@ -499,7 +502,8 @@ export const USAGE_TEXT = {
     minutes: ', {{n}} min',
     agent_cost: ', unos ${{cost}}',
     by_replicas: ' Réplicas: {{list}}.',
-    replica_item: '{{id}}{{model}} {{attempts}}, {{turns}}{{cost}}',
+    replica_item: '{{id}}{{model}} {{attempts}}, {{turns}}{{cost}}{{why}}',
+    replica_why: ', porque {{why}}',
     attempt_one: '{{n}} intento',
     attempt_many: '{{n}} intentos',
     replicas_total: ' Las réplicas juntas, unos ${{replicas}}; el resto de la ejecución, unos ${{rest}}.',
@@ -560,6 +564,12 @@ const POLICY_STOPS = {
 };
 const policyStop = (values) => POLICY_STOPS[values.reason] ?? null;
 
+// The reasons of the failure path that are a QA rejection. A comment with no reason is one too (the older callers never gave one).
+// Any other reason is a stop for that reason, including one the catalog does not know: a reason added to the skill later is never
+// described as a QA rejection. `fix` finds the comment by its title (scripts/lib/failure-comment.mjs), so a title changes there too.
+const QA_REJECTIONS = new Set(['QA rejected after the retries', 'QA rejected: nothing the developer agent can fix', 'QA rejected: the lenses contradict each other']);
+const stopsNotQa = (values) => present(values.reason) && !QA_REJECTIONS.has(values.reason);
+
 function present(value) {
   return value !== undefined && value !== null && String(value).trim() !== '';
 }
@@ -590,6 +600,25 @@ function classLine(values, es) {
   }[values.finding_class];
   if (es) return `Qué tipo de hallazgo: necesita ${what}${skipped ? ', así que se omitieron los reintentos' : ''}.`;
   return `What kind of finding: it needs ${what}${skipped ? ', so the retries were skipped' : ''}.`;
+}
+
+// Two lenses asked for fixes that cannot both be met (see scripts/lib/qa-aggregate.mjs): both lenses and both findings, quoted.
+// The four values come together or not at all.
+const CONTRADICTION_KEYS = ['contradiction_first_lens', 'contradiction_first_finding', 'contradiction_then_lens', 'contradiction_then_finding'];
+function contradicted(values) {
+  const given = CONTRADICTION_KEYS.filter((k) => present(values[k]));
+  if (given.length === 0) return false;
+  if (given.length !== CONTRADICTION_KEYS.length) throw new Error(`message "qa_failed" needs all of ${CONTRADICTION_KEYS.join(', ')} or none`);
+  return true;
+}
+const quoteOf = (text) => `“${String(text).replace(/\s+/g, ' ').trim().slice(0, 300)}”`;
+function contradictionLine(values, es) {
+  if (!contradicted(values)) return '';
+  const a = values.contradiction_first_lens;
+  const b = values.contradiction_then_lens;
+  return es
+    ? `Los hallazgos se contradicen: el lente ${a} pidió ${quoteOf(values.contradiction_first_finding)} y, hecho eso, el lente ${b} lo rechazó con ${quoteOf(values.contradiction_then_finding)}. Un reintento no puede cumplir las dos cosas.`
+    : `The findings contradict each other: the ${a} lens asked for ${quoteOf(values.contradiction_first_finding)} and, once that was done, the ${b} lens rejected it with ${quoteOf(values.contradiction_then_finding)}. A retry cannot meet both.`;
 }
 
 // The comments of a run that ended without telling anyone. They were written inline in the go workflow, which is why a repository
@@ -626,9 +655,17 @@ function runNoOutcome(values, es) {
     if (usageLimit) why = es ? 'se alcanzó el límite de uso (o el crédito) de la cuenta del modelo' : 'the usage limit (or the credit) of the model account was reached';
     // The work of a run that was not on the branch of the issue is on a branch of its own: it is not the branch fix reads.
     const own = String(values.rescue_branch).startsWith('rescue/');
+    // On the branch of the issue a later run resumes (resume-check): from the last checkpoint, or from the work kept at the stop.
+    // `checkpoints` is optional: the report says what it knows and never "from the start" there.
+    const saved = Number(values.checkpoints);
+    const resume = present(values.checkpoints) && Number.isInteger(saved) && saved >= 1
+      ? { en: `resume from the last checkpoint (${saved} saved) and build only the pending tasks`, es: `reanudar desde el último checkpoint (${saved} ${saved === 1 ? 'guardado' : 'guardados'}) y construir solo las tareas pendientes` }
+      : present(values.checkpoints) && saved === 0
+        ? { en: 'resume from the work kept on the branch (no checkpoint was saved yet)', es: 'reanudar desde el trabajo guardado en la rama (todavía no hay ningún checkpoint)' }
+        : { en: 'resume from the last point saved on the branch', es: 'reanudar desde el último punto guardado en la rama' };
     const next = own
       ? (es ? ' La ejecución no estaba en la rama del issue, así que el trabajo está en una rama aparte: cámbiate a ella y revísalo, o quita `relevo:qa-failed` y pon `relevo:ready` otra vez para construir desde el principio:' : ' The run was not on the branch of the issue, so the work is on a branch of its own: check it out and review it, or remove `relevo:qa-failed` and apply `relevo:ready` again to build from the start:')
-      : (es ? ` Ejecuta \`/relevo:fix ${values.issue}\` para verificarlo y continuar, o quita \`relevo:qa-failed\` y pon \`relevo:ready\` otra vez para construir desde el principio:` : ` Run \`/relevo:fix ${values.issue}\` to verify it and continue, or remove \`relevo:qa-failed\` and apply \`relevo:ready\` again to build from the start:`);
+      : (es ? ` Ejecuta \`/relevo:fix ${values.issue}\` para verificarlo y continuar, o quita \`relevo:qa-failed\` y pon \`relevo:ready\` otra vez para ${resume.es}. Si el texto del issue cambió o una persona hizo un commit en la rama, la ejecución se detiene con \`branch already exists\`; borra la rama remota para empezar de cero:` : ` Run \`/relevo:fix ${values.issue}\` to verify it and continue, or remove \`relevo:qa-failed\` and apply \`relevo:ready\` again to ${resume.en}. If the text of the issue changed or a person committed to the branch, the run stops with \`branch already exists\`; delete the remote branch to start over:`);
     return es
       ? `${mention(values)}La ejecución se detuvo antes de terminar (${why}). El trabajo hecho antes de detenerse se guardó en la rama \`${values.rescue_branch}\` como un commit de trabajo en curso.${next} ${values.run}`
       : `${mention(values)}The run stopped before it finished (${why}). The work done before the stop was kept on the branch \`${values.rescue_branch}\` as a work-in-progress commit.${next} ${values.run}`;
@@ -758,6 +795,7 @@ export function renderMessage(kind, data = {}, language = 'en') {
   }
   if (kind === 'qa_failed') {
     values.class_line = classLine(values, es);
+    values.contradiction_line = contradictionLine(values, es);
     const location = present(values.file) ? `${values.file}${present(values.line) ? `:${values.line}` : ''}` : '';
     values.location_suffix = location ? ` (${location})` : '';
     // `pushed: false` is the older way to say that the branch was not pushed because of a credential or a marker.
@@ -766,6 +804,7 @@ export function renderMessage(kind, data = {}, language = 'en') {
     if (state === 'existing' && !present(values.recovery)) throw new Error('message "qa_failed" needs "recovery" when the branch already existed');
     // A run that stopped at a limit was not judged by QA: the text says so instead of saying that QA rejected it.
     const stoppedAtLimit = values.reason === 'run limit reached';
+    values.headline = stopsNotQa(values) ? (es ? 'se detuvo ❌' : 'stopped ❌') : (es ? 'no pasó QA ❌' : 'failed QA ❌');
     const branchLines = {
       pushed: es
         ? `La rama ${values.branch} está subida; el estado no avanzó y no se abrió ningún pull request.`
@@ -794,6 +833,10 @@ export function renderMessage(kind, data = {}, language = 'en') {
       ? (es ? `La ejecución se detuvo en un límite antes de terminar${values.reason_suffix}.` : `The run stopped at a limit before it finished${values.reason_suffix}.`)
       : policyStop(values)
       ? `${es ? 'La ejecución se detuvo' : 'The run stopped'}${values.reason_suffix}: ${policyStop(values)[es ? 'es' : 'en']}.`
+      : stopsNotQa(values)
+      ? (es ? `La ejecución se detuvo${values.reason_suffix}. QA no rechazó el trabajo.` : `The run stopped${values.reason_suffix}. QA did not reject the work.`)
+      : contradicted(values)
+      ? (es ? `QA la rechazó y los hallazgos de dos lentes se contradicen, así que no se hicieron más reintentos${values.reason_suffix}.` : `QA rejected it and the findings of two lenses contradict each other, so there were no more retries${values.reason_suffix}.`)
       : values.retries_skipped === true
       ? (es ? 'QA la rechazó y ningún hallazgo lo puede corregir el agente de desarrollo, así que no se hicieron reintentos.' : 'QA rejected it and no finding can be corrected by the developer agent, so there were no retries.')
       : (es ? `QA la rechazó otra vez tras los reintentos${values.reason_suffix}.` : `QA still rejected it after the retries${values.reason_suffix}.`);
