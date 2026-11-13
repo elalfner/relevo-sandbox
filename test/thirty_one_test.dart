@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:relevo_sandbox/main.dart';
+import 'package:relevo_sandbox/widgets/reset_confirm_dialog.dart';
 
 void main() {
   final message = find.byKey(const Key('thirty-one-text'));
@@ -67,7 +68,9 @@ void main() {
       expect(message, findsOneWidget);
 
       await tester.tap(find.byKey(const Key('reset-button')));
-      await tester.pump();
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(ResetConfirmDialog.confirmLabel));
+      await tester.pumpAndSettle();
 
       expect(find.text('0'), findsOneWidget);
       expect(message, findsNothing);

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import 'widgets/reset_confirm_dialog.dart';
+
 const String appVersion = 'v1.0.0';
 
 void main() {
@@ -71,6 +73,8 @@ String greetingForHour(int hour) {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  static const int _confirmResetFrom = 10;
+
   int _counter = 0;
   late final String _greeting;
   String? _buildNumber;
@@ -105,7 +109,13 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void _resetCounter() {
+  /// Resets at once below [_confirmResetFrom]; from there on, only after the
+  /// person confirms the dialog.
+  Future<void> _resetCounter() async {
+    if (_counter >= _confirmResetFrom) {
+      final confirmed = await ResetConfirmDialog.show(context, _counter);
+      if (!confirmed || !mounted) return;
+    }
     setState(() => _counter = 0);
   }
 

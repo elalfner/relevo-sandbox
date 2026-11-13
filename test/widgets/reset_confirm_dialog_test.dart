@@ -26,8 +26,9 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('dialog alone shows the count and the two buttons',
-      (WidgetTester tester) async {
+  testWidgets('dialog alone shows the count and the two buttons', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(
       const MaterialApp(home: Scaffold(body: ResetConfirmDialog(count: 12))),
     );
@@ -55,8 +56,9 @@ void main() {
     handle.dispose();
   });
 
-  testWidgets('names the whole number for 100 or more',
-      (WidgetTester tester) async {
+  testWidgets('names the whole number for 100 or more', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(
       const MaterialApp(home: Scaffold(body: ResetConfirmDialog(count: 1234))),
     );
@@ -86,8 +88,9 @@ void main() {
     expect(find.byType(ResetConfirmDialog), findsNothing);
   });
 
-  testWidgets('dismissing the dialog returns false',
-      (WidgetTester tester) async {
+  testWidgets('dismissing the dialog returns false', (
+    WidgetTester tester,
+  ) async {
     final results = <bool>[];
     await openDialog(tester, 10, results);
 
