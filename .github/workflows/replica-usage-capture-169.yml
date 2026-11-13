@@ -1,5 +1,5 @@
-# TEST ONLY (relevo #169): main agent on sonnet launching three haiku subagents named like replicas, to check that run-usage.mjs estimates their cost from a real
-# log (the main agent uses a model that the replicas do not).
+# TEST ONLY (relevo #169): main agent on haiku launching three haiku subagents named like replicas, to check that run-usage.mjs estimates their cost from a real
+# log (the main agent uses the same model as the replicas).
 # workflow_dispatch only. Costs a few cents of the subscription token each time it is started.
 name: replica-usage-capture-169
 on:
@@ -30,7 +30,7 @@ jobs:
             exactly "replica 2.2". Pass the parameter model with the value "haiku" in each call. The prompt of each is: Reply with the single word ok and use no tools.
             When the three have answered, reply with the single word done.
           claude_args: >-
-            --model sonnet
+            --model haiku
             --max-turns 10
             --max-budget-usd 0.5
             --allowedTools "Task,Agent"
