@@ -39,7 +39,7 @@ qa:
 evidence:
   policy: attach_to_pr             # attach_to_pr | local_only (use for sensitive data)
 
-language: en                       # language of hand-off messages (en, es)
+language: es                       # language of hand-off messages (en, es)
 trust: private-team                # private-team | public
 
 # Rename any label here; keys are fixed, names are yours.
