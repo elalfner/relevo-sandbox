@@ -3,7 +3,7 @@
 # Never put API keys or tokens here; they belong in the repository secret store.
 
 branches:
-  base: test/relevo167-base            # integration branch: feature pull requests target it
+  base: test/relevo167-base-es            # integration branch: feature pull requests target it
   release: main        # promoted from base in a separate pull request
 
 tracker: github        # github (more later)
