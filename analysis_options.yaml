@@ -26,3 +26,9 @@ linter:
 
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options
+
+# The Flutter SDK of the runner deprecates package:flutter/material.dart (use package:material_ui), which would need a new
+# dependency (not allowed by the sandbox rules), so this diagnostic does not fail the analysis. Test setup for relevo#150.
+analyzer:
+  errors:
+    deprecated_member_use: ignore
