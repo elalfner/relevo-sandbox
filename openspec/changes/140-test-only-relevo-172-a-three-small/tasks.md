@@ -7,8 +7,8 @@
 
 ## 2. Add 7 button
 
-- [ ] 2.1 Add the "Add 7" button (key `add-seven-button`) to the home screen in `lib/main.dart`, adding 7 to the counter
-- [ ] 2.2 Add `test/add_seven_test.dart` covering 0 -> 7 and 3 -> 10; verify it passes
+- [x] 2.1 Add the "Add 7" button (key `add-seven-button`) to the home screen in `lib/main.dart`, adding 7 to the counter
+- [x] 2.2 Add `test/add_seven_test.dart` covering 0 -> 7 and 3 -> 10; verify it passes
 
 ## 3. Add 9 button
 
