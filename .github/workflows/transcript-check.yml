@@ -1,0 +1,86 @@
+name: transcript-check
+on:
+  push:
+    branches: [test/agent-output-transcript]
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # Stand-in for the agent: writes an execution log with fake secrets and the workflow token, then hangs until the job times out.
+      - id: agent
+        env:
+          TOKEN: ${{ github.token }}
+        run: |
+          cat > "$RUNNER_TEMP/exec.json" <<EOF
+          [{"type":"assistant","message":{"content":[{"type":"tool_use","id":"1","name":"Bash","input":{"command":"flutter test && echo $TOKEN"}}]}},
+           {"type":"user","message":{"content":[{"type":"tool_result","tool_use_id":"1","content":"ok DATABASE_URL=postgres://app:hunter2pass@db.example.com/app token=$TOKEN key sk-ant-api03-FAKEFAKEFAKEFAKE12345"}]}},
+           {"type":"assistant","message":{"content":[{"type":"tool_use","id":"2","name":"Read","input":{"file_path":"lib/main.dart"}}]}}]
+          EOF
+          echo "execution_file=$RUNNER_TEMP/exec.json" >> "$GITHUB_OUTPUT"
+          sleep 300
+      - name: Show the agent output
+        id: output
+        if: always()
+        continue-on-error: true
+        env:
+          EXECUTION_FILE: ${{ steps.agent.outputs.execution_file }}
+          INPUT_FULL_OUTPUT: 'true'
+          RELEVO_REDACT: |
+            ${{ secrets.ANTHROPIC_API_KEY }}
+            ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+            ${{ github.token }}
+        run: |
+          decision=$(node testscripts/scripts/run-output.mjs --config relevo.yml --input "$INPUT_FULL_OUTPUT")
+          field() { printf '%s' "$decision" | node -e 'console.log(JSON.parse(require("fs").readFileSync(0, "utf8"))[process.argv[1]] ?? "")' "$1"; }
+          echo "transcript=$(field transcript)" >> "$GITHUB_OUTPUT"
+          echo "results=$(field output)" >> "$GITHUB_OUTPUT"
+          if [ "$(field refused)" = "true" ]; then
+            echo "::notice::The full agent output was asked for and refused: $(field reason)"
+          fi
+          if [ "$(field output)" = "true" ] && [ -n "$EXECUTION_FILE" ]; then
+            echo "::group::Agent output (redacted)"
+            node testscripts/scripts/transcript.mjs --file "$EXECUTION_FILE" --results || true
+            echo "::endgroup::"
+          fi
+          exit 0
+      - name: Prepare the transcript
+        id: transcript
+        if: always()
+        continue-on-error: true
+        env:
+          EXECUTION_FILE: ${{ steps.agent.outputs.execution_file }}
+          ALLOWED: ${{ steps.output.outputs.transcript }}
+          RESULTS: ${{ steps.output.outputs.results }}
+          RELEVO_REDACT: |
+            ${{ secrets.ANTHROPIC_API_KEY }}
+            ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+            ${{ github.token }}
+        run: |
+          [ "$ALLOWED" = "true" ] && [ -n "$EXECUTION_FILE" ] || exit 0
+          flag=""; [ "$RESULTS" = "true" ] && flag="--results"
+          mkdir -p "$RUNNER_TEMP/relevo-transcript"
+          node testscripts/scripts/transcript.mjs --file "$EXECUTION_FILE" $flag > "$RUNNER_TEMP/relevo-transcript/transcript.txt" || true
+          [ -s "$RUNNER_TEMP/relevo-transcript/transcript.txt" ] || exit 0
+          echo "saved=true" >> "$GITHUB_OUTPUT"
+          exit 0
+      - name: Stand-in for the no-outcome report
+        id: no_outcome
+        if: always()
+        run: '[ "${{ job.status }}" = "success" ] || echo "reported=true" >> "$GITHUB_OUTPUT"'
+
+      - name: Save the transcript
+        if: always() && steps.transcript.outputs.saved == 'true' && (steps.no_outcome.outputs.reported == 'true' || job.status != 'success')
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: relevo-transcript
+          path: ${{ runner.temp }}/relevo-transcript/transcript.txt
+          retention-days: 7
+          if-no-files-found: ignore
