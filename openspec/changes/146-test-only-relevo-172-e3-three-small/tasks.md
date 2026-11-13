@@ -1,7 +1,7 @@
 ## 1. Add 11 button
 
-- [ ] 1.1 Add the "Add 11" button (key `add-eleven-button`) to the home screen in `lib/main.dart`
-- [ ] 1.2 Add a widget test for "Add 11" (0 -> 11, 3 -> 14) in `test/add_eleven_test.dart`
+- [x] 1.1 Add the "Add 11" button (key `add-eleven-button`) to the home screen in `lib/main.dart`
+- [x] 1.2 Add a widget test for "Add 11" (0 -> 11, 3 -> 14) in `test/add_eleven_test.dart`
 
 ## 2. Add 13 button
 

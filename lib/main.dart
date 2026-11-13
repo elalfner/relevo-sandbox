@@ -113,6 +113,10 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() => _counter += 10);
   }
 
+  void _addEleven() {
+    setState(() => _counter += 11);
+  }
+
   @override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
@@ -209,6 +213,11 @@ class _MyHomePageState extends State<MyHomePage> {
                 key: const Key('add-ten-button'),
                 onPressed: _addTen,
                 child: const Text('Add 10'),
+              ),
+              TextButton(
+                key: const Key('add-eleven-button'),
+                onPressed: _addEleven,
+                child: const Text('Add 11'),
               ),
             ],
           ),
