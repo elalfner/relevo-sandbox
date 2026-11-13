@@ -5,8 +5,8 @@
 
 ## 2. Add 13 button
 
-- [ ] 2.1 Add the "Add 13" button (key `add-thirteen-button`) to the home screen in `lib/main.dart`
-- [ ] 2.2 Add a widget test for "Add 13" (0 -> 13, 3 -> 16) in `test/add_thirteen_test.dart`
+- [x] 2.1 Add the "Add 13" button (key `add-thirteen-button`) to the home screen in `lib/main.dart`
+- [x] 2.2 Add a widget test for "Add 13" (0 -> 13, 3 -> 16) in `test/add_thirteen_test.dart`
 
 ## 3. Add 15 button
 
