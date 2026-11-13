@@ -12,5 +12,5 @@
 
 ## 3. Add 9 button
 
-- [ ] 3.1 Add the "Add 9" button (key `add-nine-button`) to the home screen in `lib/main.dart`, adding 9 to the counter
-- [ ] 3.2 Add `test/add_nine_test.dart` covering 0 -> 9 and 3 -> 12; verify it passes and that the Add 10 and greeting tests still pass
+- [x] 3.1 Add the "Add 9" button (key `add-nine-button`) to the home screen in `lib/main.dart`, adding 9 to the counter
+- [x] 3.2 Add `test/add_nine_test.dart` covering 0 -> 9 and 3 -> 12; verify it passes and that the Add 10 and greeting tests still pass
