@@ -2,8 +2,8 @@
 
 ## 1. Add 5 button
 
-- [ ] 1.1 Add the "Add 5" button (key `add-five-button`) to the home screen in `lib/main.dart`, adding 5 to the counter
-- [ ] 1.2 Add `test/add_five_test.dart` covering 0 -> 5 and 3 -> 8; verify it passes
+- [x] 1.1 Add the "Add 5" button (key `add-five-button`) to the home screen in `lib/main.dart`, adding 5 to the counter
+- [x] 1.2 Add `test/add_five_test.dart` covering 0 -> 5 and 3 -> 8; verify it passes
 
 ## 2. Add 7 button
 
