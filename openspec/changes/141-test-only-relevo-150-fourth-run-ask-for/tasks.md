@@ -1,7 +1,7 @@
 ## 1. Dialog widget
 
-- [ ] 1.1 Create `lib/widgets/reset_confirm_dialog.dart` with `ResetConfirmDialog` (takes the count; question text, Cancel and Confirm labels as constants; Confirm and Cancel have a semantics label; returns whether the person confirmed)
-- [ ] 1.2 Create `test/widgets/reset_confirm_dialog_test.dart`: the dialog alone shows the count in the question and the two buttons
+- [x] 1.1 Create `lib/widgets/reset_confirm_dialog.dart` with `ResetConfirmDialog` (takes the count; question text, Cancel and Confirm labels as constants; Confirm and Cancel have a semantics label; returns whether the person confirmed)
+- [x] 1.2 Create `test/widgets/reset_confirm_dialog_test.dart`: the dialog alone shows the count in the question and the two buttons
 
 ## 2. Home screen
 
