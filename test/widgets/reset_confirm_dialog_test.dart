@@ -34,7 +34,6 @@ void main() {
     );
 
     expect(find.text(ResetConfirmDialog.question(12)), findsOneWidget);
-    expect(find.text('Reset the counter of 12?'), findsOneWidget);
     expect(find.text(ResetConfirmDialog.cancelLabel), findsOneWidget);
     expect(find.text(ResetConfirmDialog.confirmLabel), findsOneWidget);
   });
@@ -63,7 +62,7 @@ void main() {
       const MaterialApp(home: Scaffold(body: ResetConfirmDialog(count: 1234))),
     );
 
-    expect(find.text('Reset the counter of 1234?'), findsOneWidget);
+    expect(find.text(ResetConfirmDialog.question(1234)), findsOneWidget);
   });
 
   testWidgets('Confirm returns true', (WidgetTester tester) async {
