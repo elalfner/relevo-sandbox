@@ -8,9 +8,9 @@
 
 ## 2. Screens and widgets
 
-- [ ] 2.1 Add `lib/widgets/add_task_sheet.dart` (title field, priority choice, Save, errors "Write a title", "At most 60 characters", "That task already exists"); verify with widget tests for add, empty, 61/60 characters, "Café ☕", duplicate
-- [ ] 2.2 Add `lib/screens/tasks_screen.dart` (header count, filter chips, sort menu, list, checkbox with line through, empty texts, Add button, swipe delete with snackbar Undo, semantics labels and delete action); verify with widget tests for done/filters/empty texts/sorts/delete/undo/two quick swipes/reuse after delete
-- [ ] 2.3 Add the Tasks button on `MyHomePage` in `lib/main.dart` (controller owned by the home state so the list survives reopening); verify with widget tests for opening, "0 tasks", "Nothing to do yet", and reopening keeps the list; existing counter tests keep passing
+- [x] 2.1 Add `lib/widgets/add_task_sheet.dart` (title field, priority choice, Save, errors "Write a title", "At most 60 characters", "That task already exists"); verify with widget tests for add, empty, 61/60 characters, "Café ☕", duplicate
+- [x] 2.2 Add `lib/screens/tasks_screen.dart` (header count, filter chips, sort menu, list, checkbox with line through, empty texts, Add button, swipe delete with snackbar Undo, semantics labels and delete action); verify with widget tests for done/filters/empty texts/sorts/delete/undo/two quick swipes/reuse after delete
+- [x] 2.3 Add the Tasks button on `MyHomePage` in `lib/main.dart` (controller owned by the home state so the list survives reopening); verify with widget tests for opening, "0 tasks", "Nothing to do yet", and reopening keeps the list; existing counter tests keep passing
 
 ## 3. Documentation and checks
 
