@@ -78,9 +78,12 @@ jobs:
       - name: Save the transcript
         if: always() && steps.transcript.outputs.saved == 'true' && (steps.no_outcome.outputs.reported == 'true' || job.status != 'success')
         continue-on-error: true
-        uses: actions/upload-artifact@v4
-        with:
-          name: relevo-transcript
-          path: ${{ runner.temp }}/relevo-transcript/transcript.txt
-          retention-days: 7
-          if-no-files-found: ignore
+        run: |
+          {
+            echo "### Agent transcript (redacted, last commands of the run)"
+            echo
+            echo '````text'
+            cat "$RUNNER_TEMP/relevo-transcript/transcript.txt"
+            echo '````'
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit 0
