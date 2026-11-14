@@ -336,7 +336,7 @@ void main() {
         node.getSemanticsData().customSemanticsActionIds,
         contains(CustomSemanticsAction.getIdentifier(action)),
       );
-      tester.binding.pipelineOwner.semanticsOwner!.performAction(
+      node.owner!.performAction(
         node.id,
         SemanticsAction.customAction,
         CustomSemanticsAction.getIdentifier(action),
