@@ -31,3 +31,15 @@ _Avoid_: Tab, view, category
 **Priority**:
 One of High, Medium or Low, chosen when a task is added; it decides the order when the list is sorted by priority.
 _Avoid_: Importance, urgency, level
+
+**Display name**:
+The name the person writes in Settings, of 2 to 30 characters, which the greeting shows after a comma.
+_Avoid_: Username, nickname, profile name
+
+**Theme mode**:
+The choice of System, Light or Dark that decides the colours of the whole app; it applies at once and is not part of the form.
+_Avoid_: Skin, colour scheme, dark mode switch
+
+**Unsaved changes**:
+The state of the Settings form when a value differs from the last saved one; it enables Save and makes back ask for confirmation.
+_Avoid_: Dirty form, pending edits
