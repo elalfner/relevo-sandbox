@@ -18,5 +18,5 @@
 
 ## 4. Documentation and checks
 
-- [ ] 4.1 Write the documentation from the issue exactly as given: add the entries Display name, Theme mode and Unsaved changes to `GLOSSARY.md` after the existing ones; verify the file shows them and nothing else changed
-- [ ] 4.2 Run `flutter analyze` and `flutter test`; verify both pass and no `print`, `TODO` or `debugPrint` remains
+- [x] 4.1 Write the documentation from the issue exactly as given: add the entries Display name, Theme mode and Unsaved changes to `GLOSSARY.md` after the existing ones; verify the file shows them and nothing else changed
+- [x] 4.2 Run `flutter analyze` and `flutter test`; verify both pass and no `print`, `TODO` or `debugPrint` remains
