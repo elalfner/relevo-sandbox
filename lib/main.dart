@@ -1,5 +1,11 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+
+import 'screens/tasks_screen.dart';
+import 'screens/tasks_strings.dart';
+import 'state/task_list_controller.dart';
 
 const String appVersion = 'v1.0.0';
 
@@ -75,6 +81,9 @@ class _MyHomePageState extends State<MyHomePage> {
   late final String _greeting;
   String? _buildNumber;
 
+  /// Owned here, not by the Tasks screen, so the list survives reopening it.
+  final TaskListController _tasks = TaskListController();
+
   @override
   void initState() {
     super.initState();
@@ -92,6 +101,18 @@ class _MyHomePageState extends State<MyHomePage> {
     } catch (_) {
       // Unreadable build number: keep showing only the version label.
     }
+  }
+
+  @override
+  void dispose() {
+    _tasks.dispose();
+    super.dispose();
+  }
+
+  void _openTasks() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => TasksScreen(controller: _tasks)),
+    );
   }
 
   void _incrementCounter() {
@@ -200,6 +221,18 @@ class _MyHomePageState extends State<MyHomePage> {
                 key: const Key('reset-button'),
                 onPressed: _resetCounter,
                 child: const Text('Reset'),
+              ),
+              Semantics(
+                label: TasksStrings.homeButtonSemantics,
+                button: true,
+                enabled: true,
+                onTap: _openTasks,
+                excludeSemantics: true,
+                child: FilledButton.tonal(
+                  key: const Key('tasks-button'),
+                  onPressed: _openTasks,
+                  child: const Text(TasksStrings.homeButton),
+                ),
               ),
             ],
           ),

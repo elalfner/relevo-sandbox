@@ -19,3 +19,15 @@ _Avoid_: Build label, build, build version
 **Version label**:
 The text "v1.0.0" shown in the app bar subtitle. It is written in the app, not read from `pubspec.yaml`, so it can differ from the pubspec version.
 _Avoid_: App version, version number
+
+**Task**:
+One line of the to-do list, with a title of up to 60 characters, a priority and a done or open state.
+_Avoid_: Todo, item, entry
+
+**Task filter**:
+One of the three views of the list (All, Open, Done) that decide which tasks are shown.
+_Avoid_: Tab, view, category
+
+**Priority**:
+One of High, Medium or Low, chosen when a task is added; it decides the order when the list is sorted by priority.
+_Avoid_: Importance, urgency, level
