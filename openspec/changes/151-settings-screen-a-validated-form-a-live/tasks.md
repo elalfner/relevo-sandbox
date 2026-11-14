@@ -2,8 +2,8 @@
 
 ## 1. Validation and state
 
-- [ ] 1.1 Add `lib/models/settings_validation.dart` with the name, email and age validators and message constants; verify with `test/settings_validation_test.dart` covering 1/2/30/31 characters, spaces only, the email examples, 254/255 characters, and ages 12/13/120/121/"abc"/"30.5"
-- [ ] 1.2 Add `lib/state/settings_controller.dart` (saved values, theme mode, notifications, save, dirty check, trimming); verify with `test/settings_controller_test.dart` (defaults, save trims "  Ana  ", clean again after reverting a value, theme is independent of saved values)
+- [x] 1.1 Add `lib/models/settings_validation.dart` with the name, email and age validators and message constants; verify with `test/settings_validation_test.dart` covering 1/2/30/31 characters, spaces only, the email examples, 254/255 characters, and ages 12/13/120/121/"abc"/"30.5"
+- [x] 1.2 Add `lib/state/settings_controller.dart` (saved values, theme mode, notifications, save, dirty check, trimming); verify with `test/settings_controller_test.dart` (defaults, save trims "  Ana  ", clean again after reverting a value, theme is independent of saved values)
 
 ## 2. Settings screen
 
