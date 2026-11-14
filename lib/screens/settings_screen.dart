@@ -20,10 +20,20 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  final TextEditingController _name = TextEditingController();
-  final TextEditingController _email = TextEditingController();
-  final TextEditingController _age = TextEditingController();
-  bool _notifications = true;
+  late final TextEditingController _name;
+  late final TextEditingController _email;
+  late final TextEditingController _age;
+  late bool _notifications;
+
+  @override
+  void initState() {
+    super.initState();
+    final saved = widget.controller;
+    _name = TextEditingController(text: saved.name);
+    _email = TextEditingController(text: saved.email);
+    _age = TextEditingController(text: saved.age);
+    _notifications = saved.notifications;
+  }
 
   @override
   void dispose() {

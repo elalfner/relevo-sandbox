@@ -342,6 +342,59 @@ void main() {
     });
   });
 
+  group('reopening after a save', () {
+    Future<SettingsController> saveAndReopen(WidgetTester tester) async {
+      final controller = await pumpSettings(tester);
+      await fillValid(tester);
+      await tester.tap(find.byType(Switch));
+      await tester.pump();
+      await tester.tap(_saveButton);
+      await tester.pump();
+      await pressSystemBack(tester);
+      expect(find.byType(SettingsScreen), findsNothing);
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+      return controller;
+    }
+
+    testWidgets('shows the saved values, Save disabled, no errors', (
+      tester,
+    ) async {
+      await saveAndReopen(tester);
+      expect(tester.widget<TextField>(_nameField).controller!.text, 'Ana');
+      expect(
+        tester.widget<TextField>(_emailField).controller!.text,
+        'ana@example.com',
+      );
+      expect(tester.widget<TextField>(_ageField).controller!.text, '30');
+      expect(tester.widget<Switch>(find.byType(Switch)).value, isFalse);
+      expect(saveEnabled(tester), isFalse);
+      expect(find.text(nameErrorMessage), findsNothing);
+      expect(find.text(emailErrorMessage), findsNothing);
+      expect(find.text(ageErrorMessage), findsNothing);
+    });
+
+    testWidgets('back on the untouched form closes without the dialog', (
+      tester,
+    ) async {
+      await saveAndReopen(tester);
+      await pressSystemBack(tester);
+      expect(_dialogTitle, findsNothing);
+      expect(find.byType(SettingsScreen), findsNothing);
+    });
+
+    testWidgets('editing enables Save and back asks to discard', (
+      tester,
+    ) async {
+      await saveAndReopen(tester);
+      await tester.enterText(_nameField, 'Anna');
+      await tester.pump();
+      expect(saveEnabled(tester), isTrue);
+      await pressSystemBack(tester);
+      expect(_dialogTitle, findsOneWidget);
+    });
+  });
+
   group('theme', () {
     testWidgets('choosing Dark applies at once, before Save', (tester) async {
       final controller = await pumpSettings(tester);
