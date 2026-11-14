@@ -2,9 +2,9 @@
 
 ## 1. Model and controller
 
-- [ ] 1.1 Add `Task` and `TaskPriority` in `lib/models/task.dart`; verify with `flutter analyze`
-- [ ] 1.2 Add `TaskListController` (`ChangeNotifier`) in `lib/state/task_list_controller.dart` with add/validate (empty, 60 characters by user-perceived characters, duplicates ignoring case and edge spaces), toggle, filter, sort (added, priority stable, title case-insensitive), delete and undo at former index, and counts; verify with `test/task_list_controller_test.dart` covering duplicates, the three sorts and the counts
-- [ ] 1.3 Add `lib/screens/tasks_strings.dart` with every visible text as constants and the singular/plural header function; verify it is used by the tests
+- [x] 1.1 Add `Task` and `TaskPriority` in `lib/models/task.dart`; verify with `flutter analyze`
+- [x] 1.2 Add `TaskListController` (`ChangeNotifier`) in `lib/state/task_list_controller.dart` with add/validate (empty, 60 characters by user-perceived characters, duplicates ignoring case and edge spaces), toggle, filter, sort (added, priority stable, title case-insensitive), delete and undo at former index, and counts; verify with `test/task_list_controller_test.dart` covering duplicates, the three sorts and the counts
+- [x] 1.3 Add `lib/screens/tasks_strings.dart` with every visible text as constants and the singular/plural header function; verify it is used by the tests
 
 ## 2. Screens and widgets
 
