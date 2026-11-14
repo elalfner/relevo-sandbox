@@ -15,4 +15,4 @@
 ## 3. Documentation and checks
 
 - [x] 3.1 Write the documentation from the issue exactly as given: add the Task, Task filter and Priority entries to `GLOSSARY.md`
-- [ ] 3.2 Run `flutter analyze` and `flutter test`; both pass with no `print`, `TODO` or `debugPrint` left
+- [x] 3.2 Run `flutter analyze` and `flutter test`; both pass with no `print`, `TODO` or `debugPrint` left
