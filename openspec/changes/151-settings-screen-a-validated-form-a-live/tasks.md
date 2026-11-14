@@ -7,9 +7,9 @@
 
 ## 2. Settings screen
 
-- [ ] 2.1 Add `lib/screens/settings_screen.dart` and helper widgets under `lib/widgets/` (form fields, theme chooser, discard dialog) with the initial state, error messages on leaving a field, and Save enabled only for a valid changed form; verify with widget tests in `test/settings_screen_test.dart` for the initial state, each error message and Save enabled/disabled
-- [ ] 2.2 Add save (snackbar "Settings saved", Save disabled, screen stays) and the back handling for system back and app bar arrow ("Discard your changes?", Keep editing, Discard, no dialog when clean or saved); verify with widget tests for each case
-- [ ] 2.3 Add semantics labels for every field, the switch, the theme options and the buttons, and announce errors; verify with a widget test using the semantics tree
+- [x] 2.1 Add `lib/screens/settings_screen.dart` and helper widgets under `lib/widgets/` (form fields, theme chooser, discard dialog) with the initial state, error messages on leaving a field, and Save enabled only for a valid changed form; verify with widget tests in `test/settings_screen_test.dart` for the initial state, each error message and Save enabled/disabled
+- [x] 2.2 Add save (snackbar "Settings saved", Save disabled, screen stays) and the back handling for system back and app bar arrow ("Discard your changes?", Keep editing, Discard, no dialog when clean or saved); verify with widget tests for each case
+- [x] 2.3 Add semantics labels for every field, the switch, the theme options and the buttons, and announce errors; verify with a widget test using the semantics tree
 
 ## 3. App wiring
 
