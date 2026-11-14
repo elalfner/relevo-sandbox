@@ -8,6 +8,7 @@ class SettingsStrings {
   const SettingsStrings._();
 
   static const String homeButton = 'Settings';
+  static const String homeButtonSemantics = 'Open settings';
   static const String title = 'Settings';
 
   static const String nameLabel = 'Name';

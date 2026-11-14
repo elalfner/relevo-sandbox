@@ -13,8 +13,8 @@
 
 ## 3. App wiring
 
-- [ ] 3.1 Make `MyApp` own the `SettingsController` and apply `themeMode` with light and dark themes at once; add the Settings button to the home screen; verify with a widget test that choosing Dark makes both screens dark before Save, System follows the phone, and discarding keeps the theme
-- [ ] 3.2 Show the saved name in the greeting after a comma without changing `greetingForHour` or the fixed time slot; verify with widget tests ("Good morning, Ana" at 09:00, "Good morning" without a name, the 05:00/12:00/18:00 limits) and that `test/greeting_test.dart` and `test/widget_test.dart` pass unchanged
+- [x] 3.1 Make `MyApp` own the `SettingsController` and apply `themeMode` with light and dark themes at once; add the Settings button to the home screen; verify with a widget test that choosing Dark makes both screens dark before Save, System follows the phone, and discarding keeps the theme
+- [x] 3.2 Show the saved name in the greeting after a comma without changing `greetingForHour` or the fixed time slot; verify with widget tests ("Good morning, Ana" at 09:00, "Good morning" without a name, the 05:00/12:00/18:00 limits) and that `test/greeting_test.dart` and `test/widget_test.dart` pass unchanged
 
 ## 4. Documentation and checks
 

@@ -3,8 +3,11 @@
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import 'screens/settings_screen.dart';
+import 'screens/settings_strings.dart';
 import 'screens/tasks_screen.dart';
 import 'screens/tasks_strings.dart';
+import 'state/settings_controller.dart';
 import 'state/task_list_controller.dart';
 
 const String appVersion = 'v1.0.0';
@@ -13,42 +16,57 @@ void main() {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key, this.clock = DateTime.now});
 
   /// Source of the current time, used to choose the greeting.
   final DateTime Function() clock;
 
-  // This widget is the root of your application.
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  /// Owned here so the theme and the saved name reach every screen.
+  final SettingsController _settings = SettingsController();
+
+  @override
+  void dispose() {
+    _settings.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
+    return ListenableBuilder(
+      listenable: _settings,
+      builder: (context, _) => MaterialApp(
+        title: 'Flutter Demo',
+        themeMode: _settings.themeMode,
+        theme: ThemeData(colorScheme: .fromSeed(seedColor: Colors.deepPurple)),
+        darkTheme: ThemeData(
+          colorScheme: .fromSeed(
+            seedColor: Colors.deepPurple,
+            brightness: Brightness.dark,
+          ),
+        ),
+        home: MyHomePage(
+          title: 'Flutter Demo Home Page',
+          clock: widget.clock,
+          settings: _settings,
+        ),
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page', clock: clock),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title, this.clock = DateTime.now});
+  const MyHomePage({
+    super.key,
+    required this.title,
+    required this.settings,
+    this.clock = DateTime.now,
+  });
 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
@@ -60,6 +78,9 @@ class MyHomePage extends StatefulWidget {
   // always marked "final".
 
   final String title;
+
+  /// The saved settings; the greeting shows the saved name.
+  final SettingsController settings;
 
   /// Source of the current time, read once to choose the greeting.
   final DateTime Function() clock;
@@ -112,6 +133,14 @@ class _MyHomePageState extends State<MyHomePage> {
   void _openTasks() {
     Navigator.of(context).push(
       MaterialPageRoute<void>(builder: (_) => TasksScreen(controller: _tasks)),
+    );
+  }
+
+  void _openSettings() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => SettingsScreen(controller: widget.settings),
+      ),
     );
   }
 
@@ -200,11 +229,17 @@ class _MyHomePageState extends State<MyHomePage> {
             // wireframe for each widget.
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                _greeting,
-                key: const Key('greeting-text'),
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.headlineMedium,
+              ListenableBuilder(
+                listenable: widget.settings,
+                builder: (context, _) {
+                  final name = widget.settings.name;
+                  return Text(
+                    name.isEmpty ? _greeting : '$_greeting, $name',
+                    key: const Key('greeting-text'),
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.headlineMedium,
+                  );
+                },
               ),
               const Text('You have pushed the button this many times:'),
               Text(
@@ -222,17 +257,36 @@ class _MyHomePageState extends State<MyHomePage> {
                 onPressed: _resetCounter,
                 child: const Text('Reset'),
               ),
-              Semantics(
-                label: TasksStrings.homeButtonSemantics,
-                button: true,
-                enabled: true,
-                onTap: _openTasks,
-                excludeSemantics: true,
-                child: FilledButton.tonal(
-                  key: const Key('tasks-button'),
-                  onPressed: _openTasks,
-                  child: const Text(TasksStrings.homeButton),
-                ),
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  Semantics(
+                    label: TasksStrings.homeButtonSemantics,
+                    button: true,
+                    enabled: true,
+                    onTap: _openTasks,
+                    excludeSemantics: true,
+                    child: FilledButton.tonal(
+                      key: const Key('tasks-button'),
+                      onPressed: _openTasks,
+                      child: const Text(TasksStrings.homeButton),
+                    ),
+                  ),
+                  Semantics(
+                    label: SettingsStrings.homeButtonSemantics,
+                    button: true,
+                    enabled: true,
+                    onTap: _openSettings,
+                    excludeSemantics: true,
+                    child: FilledButton.tonal(
+                      key: const Key('settings-button'),
+                      onPressed: _openSettings,
+                      child: const Text(SettingsStrings.homeButton),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
