@@ -140,8 +140,8 @@ void main() {
       find.descendant(of: find.byType(AppBar), matching: version),
       findsOneWidget,
     );
-    expect(tester.widget<Text>(version).data, 'v1.0.0');
-    expect(find.text('v1.0.0'), findsOneWidget);
+    expect(tester.widget<Text>(version).data, 'v1.1.0');
+    expect(find.text('v1.1.0'), findsOneWidget);
   });
 
   testWidgets('Version subtitle is ellipsized on a very small screen', (

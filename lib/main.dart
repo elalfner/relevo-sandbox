@@ -10,7 +10,7 @@ import 'screens/tasks_strings.dart';
 import 'state/settings_controller.dart';
 import 'state/task_list_controller.dart';
 
-const String appVersion = 'v1.0.0';
+const String appVersion = 'v1.1.0';
 
 void main() {
   runApp(const MyApp());

@@ -26,7 +26,7 @@ void main() {
     await tester.pumpWidget(const MyApp());
     await tester.pumpAndSettle();
 
-    expect(tester.widget<Text>(version).data, 'v1.0.0');
+    expect(tester.widget<Text>(version).data, 'v1.1.0');
     expect(tester.widget<Text>(build).data, 'Build 1');
     expect(
       find.descendant(of: find.byType(AppBar), matching: build),
@@ -60,7 +60,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Build 7'), findsOneWidget);
-    expect(find.text('v1.0.0'), findsOneWidget);
+    expect(find.text('v1.1.0'), findsOneWidget);
   });
 
   testWidgets('Very small screen: both texts ellipsized, no overflow', (
