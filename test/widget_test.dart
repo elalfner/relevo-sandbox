@@ -105,6 +105,15 @@ void main() {
     );
   });
 
+  testWidgets('Parity text says Odd at 5', (tester) async {
+    await tester.pumpWidget(const MyApp());
+    await tapAdd(tester, 5);
+
+    expect(find.text('5'), findsOneWidget);
+    expect(find.text('Odd'), findsOneWidget);
+    expect(find.text('Even'), findsNothing);
+  });
+
   testWidgets('Parity text says Even after reset from an odd count', (
     tester,
   ) async {
