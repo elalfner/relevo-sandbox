@@ -255,7 +255,7 @@ class _MyHomePageState extends State<MyHomePage> {
               TextButton(
                 key: const Key('reset-button'),
                 onPressed: _resetCounter,
-                child: const Text('Reset'),
+                child: const Text('Reset counter'),
               ),
               Wrap(
                 alignment: WrapAlignment.center,

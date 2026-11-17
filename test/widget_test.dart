@@ -51,7 +51,7 @@ void main() {
 
   testWidgets('Reset keeps a zero counter at 0', (tester) async {
     await tester.pumpWidget(const MyApp());
-    expect(find.text('Reset'), findsOneWidget);
+    expect(find.text('Reset counter'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('reset-button')));
     await tester.pump();
@@ -69,6 +69,46 @@ void main() {
 
     expect(find.text('0'), findsOneWidget);
     expect(find.text('1001'), findsNothing);
+  });
+
+  testWidgets('Reset button reads Reset counter on open', (tester) async {
+    await tester.pumpWidget(const MyApp());
+
+    final label = find.descendant(
+      of: find.byKey(const Key('reset-button')),
+      matching: find.text('Reset counter'),
+    );
+    expect(label, findsOneWidget);
+    expect(find.text('Reset'), findsNothing);
+  });
+
+  testWidgets('Reset label stays after the counter changes', (tester) async {
+    await tester.pumpWidget(const MyApp());
+    await tapAdd(tester, 1);
+
+    expect(find.text('1'), findsOneWidget);
+    expect(find.text('Odd'), findsOneWidget);
+    expect(find.text('Reset counter'), findsOneWidget);
+
+    await tapAdd(tester, 1);
+
+    expect(find.text('2'), findsOneWidget);
+    expect(find.text('Even'), findsOneWidget);
+    expect(find.text('Reset counter'), findsOneWidget);
+    expect(find.text('Reset'), findsNothing);
+  });
+
+  testWidgets('Reset label does not overflow on a very small screen', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(200, 400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(const MyApp());
+
+    expect(find.text('Reset counter'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('Parity text says Even at 0', (tester) async {
