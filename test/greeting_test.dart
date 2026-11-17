@@ -22,6 +22,7 @@ void main() {
       'evening at 00:00': (0, 0, 'Good evening'),
       'evening at 04:59': (4, 59, 'Good evening'),
       'morning at 05:00': (5, 0, 'Good morning'),
+      'morning at 06:00': (6, 0, 'Good morning'),
       'morning at 11:59': (11, 59, 'Good morning'),
       'afternoon at 12:00': (12, 0, 'Good afternoon'),
       'afternoon at 17:59': (17, 59, 'Good afternoon'),
