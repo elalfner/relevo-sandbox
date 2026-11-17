@@ -42,9 +42,7 @@ void main() {
       tester,
     ) async {
       await openAt(tester, 9);
-      final counterText = find.text(
-        'You have pushed the button this many times:',
-      );
+      final counterText = find.text('Times pressed:');
 
       expect(counterText, findsOneWidget);
       expect(
