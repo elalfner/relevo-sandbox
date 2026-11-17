@@ -107,6 +107,20 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('Build 99999 is shown right after the version', (tester) async {
+    mockBuild('99999');
+    await tester.pumpWidget(const MyApp());
+    await tester.pumpAndSettle();
+
+    expect(tester.widget<Text>(version).data, 'v1.0.1');
+    expect(tester.widget<Text>(build).data, 'Build 99999');
+    final v = tester.getRect(version);
+    final b = tester.getRect(build);
+    expect(b.left, greaterThan(v.right));
+    expect(b.top, v.top);
+    expect(b.bottom, v.bottom);
+  });
+
   testWidgets('Zero is shown as received', (tester) async {
     mockBuild('0');
     await tester.pumpWidget(const MyApp());
