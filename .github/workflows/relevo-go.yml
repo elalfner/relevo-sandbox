@@ -1,4 +1,4 @@
-# relevo-template: 0.18.1
+# relevo-template: 0.15.0
 # Relevo: builds an issue in the cloud. It starts when someone with write access applies `relevo:go` to an issue that is `relevo:ready`
 # (`ready` approves the text and starts nothing; `go` requests the build). A build on a machine (/relevo:go <n>) never starts it.
 # Copy to .github/workflows/relevo-go.yml. If you renamed the ready or go label in relevo.yml, change them below too.
@@ -23,7 +23,7 @@ name: relevo-go
 # The version of @elalfner/relevo whose scripts this workflow runs. The plugin's templates carry the version they
 # were released with, and `/relevo:init` reports this file as different when it is older; change it by hand to update.
 env:
-  RELEVO_VERSION: '0.18.1'
+  RELEVO_VERSION: '0.16.0'
   # The version of OpenSpec that the job installs for itself.
   OPENSPEC_VERSION: '1.14.3'
   # The version of Bun that the build job installs, caches and hands to the agent action. It is the one claude-code-action
@@ -93,14 +93,14 @@ jobs:
         # script this job runs stops the run here, before anything is changed.
         run: |
           mkdir -p .relevo-plugin
-          rm -rf "$RUNNER_TEMP/relevo-src" && git clone --quiet https://github.com/elalfner/relevo.git "$RUNNER_TEMP/relevo-src" && git -C "$RUNNER_TEMP/relevo-src" checkout --quiet e803cf6992fffbf5d30bdcbe796f454c5efa62fb && npm pack "$RUNNER_TEMP/relevo-src" --silent --pack-destination "$RUNNER_TEMP" > /dev/null
+          npm pack "@elalfner/relevo@$RELEVO_VERSION" --silent --pack-destination "$RUNNER_TEMP" > /dev/null
           tar -xzf "$RUNNER_TEMP"/elalfner-relevo-*.tgz --strip-components=1 -C .relevo-plugin
           for f in scripts/go-plan.mjs scripts/render-message.mjs; do
             [ -f ".relevo-plugin/$f" ] || { echo "::error::The Relevo package $RELEVO_VERSION lacks $f"; exit 1; }
           done
 
       # Applies the gates and, when the decision is `start`, claims the issue (relevo:building). Any other decision
-      # (needs-spec, blocked, queued, denied, no assignee) is applied here with its comment.
+      # (needs-spec, blocked, queued, denied, no milestone, no assignee) is applied here with its comment.
       - name: Gates and claim
         id: plan
         env:
@@ -201,7 +201,7 @@ jobs:
           ISSUE: ${{ github.event.issue.number || inputs.issue }}
         run: |
           mkdir -p "$RUNNER_TEMP/relevo"
-          rm -rf "$RUNNER_TEMP/relevo-src" && git clone --quiet https://github.com/elalfner/relevo.git "$RUNNER_TEMP/relevo-src" && git -C "$RUNNER_TEMP/relevo-src" checkout --quiet e803cf6992fffbf5d30bdcbe796f454c5efa62fb && npm pack "$RUNNER_TEMP/relevo-src" --silent --pack-destination "$RUNNER_TEMP" > /dev/null || exit 0
+          npm pack "@elalfner/relevo@$RELEVO_VERSION" --silent --pack-destination "$RUNNER_TEMP" > /dev/null || exit 0
           tar -xzf "$RUNNER_TEMP"/elalfner-relevo-*.tgz --strip-components=1 -C "$RUNNER_TEMP/relevo" || exit 0
           script="$RUNNER_TEMP/relevo/scripts/progress.mjs"
           [ -f "$script" ] || exit 0
@@ -343,7 +343,7 @@ jobs:
           PLATFORM: ${{ needs.decide.outputs.platform }}
         run: |
           mkdir -p "$RUNNER_TEMP/relevo"
-          rm -rf "$RUNNER_TEMP/relevo-src" && git clone --quiet https://github.com/elalfner/relevo.git "$RUNNER_TEMP/relevo-src" && git -C "$RUNNER_TEMP/relevo-src" checkout --quiet e803cf6992fffbf5d30bdcbe796f454c5efa62fb && npm pack "$RUNNER_TEMP/relevo-src" --silent --pack-destination "$RUNNER_TEMP" > /dev/null
+          npm pack "@elalfner/relevo@$RELEVO_VERSION" --silent --pack-destination "$RUNNER_TEMP" > /dev/null
           tar -xzf "$RUNNER_TEMP"/elalfner-relevo-*.tgz --strip-components=1 -C "$RUNNER_TEMP/relevo"
           for f in scripts/toolchain-check.mjs scripts/render-message.mjs scripts/design-fetch.mjs .claude-plugin/plugin.json; do
             [ -f "$RUNNER_TEMP/relevo/$f" ] || { echo "::error::The Relevo package $RELEVO_VERSION lacks $f"; exit 1; }
@@ -614,7 +614,7 @@ jobs:
         continue-on-error: true
         run: |
           mkdir -p .relevo-plugin
-          rm -rf "$RUNNER_TEMP/relevo-src" && git clone --quiet https://github.com/elalfner/relevo.git "$RUNNER_TEMP/relevo-src" && git -C "$RUNNER_TEMP/relevo-src" checkout --quiet e803cf6992fffbf5d30bdcbe796f454c5efa62fb && npm pack "$RUNNER_TEMP/relevo-src" --silent --pack-destination "$RUNNER_TEMP" > /dev/null
+          npm pack "@elalfner/relevo@$RELEVO_VERSION" --silent --pack-destination "$RUNNER_TEMP" > /dev/null
           tar -xzf "$RUNNER_TEMP"/elalfner-relevo-*.tgz --strip-components=1 -C .relevo-plugin
           for f in scripts/run-usage.mjs scripts/usage-limit.mjs scripts/limit-retry.mjs scripts/run-cut.mjs scripts/rescue-work.mjs scripts/progress.mjs scripts/tree-baseline.mjs scripts/render-message.mjs scripts/transcript.mjs scripts/run-output.mjs; do
             [ -f ".relevo-plugin/$f" ] || { echo "::error::The Relevo package $RELEVO_VERSION lacks $f"; exit 1; }
@@ -905,33 +905,6 @@ jobs:
           line="No runner took the build of this issue, so nothing was built and nothing failed. It is back in the queue, which tries it again."
           [ "$lang" = "es" ] && line="Ningún runner tomó la construcción de este issue, así que no se construyó nada y nada falló. Vuelve a la cola, que lo intenta de nuevo."
           gh issue edit "$ISSUE" --remove-label relevo:building --add-label relevo:queued
-          gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$id" -f body="$line
-
-          <!-- relevo:progress -->
-          <!-- relevo:progress:closed -->" > /dev/null
-
-      # The build job closes its own progress comment, but a runner that stopped answering GitHub ran none of those steps, so
-      # the comment would say "in progress" for as long as the issue exists. This step runs on another runner: when the build
-      # ended as failed or cancelled and the comment is still open (the closing markers are what the checks of the build read
-      # before they write), it replaces the comment by one line. A comment that the build job already closed is left alone, and
-      # no label or comment changes. It never fails the job.
-      - name: Close the progress comment of a build that ended without closing it
-        continue-on-error: true
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-          ISSUE: ${{ github.event.issue.number || inputs.issue }}
-          BUILD_RESULT: ${{ needs.build.result }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: |
-          case "$BUILD_RESULT" in failure|cancelled) ;; *) exit 0 ;; esac
-          id=$(gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$ISSUE/comments?per_page=100" --jq '.[] | select(.user.type == "Bot" and (.body | contains("<!-- relevo:progress -->")) and ((.body | contains("<!-- relevo:progress:closed -->")) | not)) | .id' | tail -n 1)
-          [ -n "$id" ] || exit 0
-          lang=$(gh api "repos/$GITHUB_REPOSITORY/contents/relevo.yml" --jq .content 2>/dev/null | base64 -d 2>/dev/null | sed -n 's/^language:[[:space:]]*\([a-z][a-z]*\).*/\1/p' | head -n 1)
-          line="The Relevo build ended without an outcome: its runner stopped answering.
-          Run: $RUN_URL"
-          [ "$lang" = "es" ] && line="La construcción de Relevo terminó sin resultado: su runner dejó de responder.
-          Ejecución: $RUN_URL"
           gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$id" -f body="$line
 
           <!-- relevo:progress -->
