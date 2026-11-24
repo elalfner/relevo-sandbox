@@ -9,4 +9,4 @@
 
 ## 2. Verification
 
-- [ ] 2.1 Run `flutter analyze` and `flutter test`; verify both pass with no `print`, `TODO` or `debugPrint` left
+- [x] 2.1 Run `flutter analyze` and `flutter test`; verify both pass with no `print`, `TODO` or `debugPrint` left
