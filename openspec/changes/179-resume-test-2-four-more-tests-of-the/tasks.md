@@ -1,6 +1,6 @@
 ## 1. Even and odd label
 
-- [ ] 1.1 Add `test/even_odd_test.dart` with checks that the label reads Even at 0, Odd at 1 and Even at 2
+- [x] 1.1 Add `test/even_odd_test.dart` with checks that the label reads Even at 0, Odd at 1 and Even at 2
 
 ## 2. Caption
 
