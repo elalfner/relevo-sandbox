@@ -8,7 +8,7 @@
 
 ## 3. Tooltip
 
-- [ ] 3.1 Add `test/tooltip_test.dart` with one check that finds the tooltip "Increment" on the floating button
+- [x] 3.1 Add `test/tooltip_test.dart` with one check that finds the tooltip "Increment" on the floating button
 
 ## 4. Three taps
 
