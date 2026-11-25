@@ -7,4 +7,4 @@
 
 ## 2. Verify
 
-- [ ] 2.1 Run `flutter analyze` and `flutter test`; both pass, no `print`, `TODO` or `debugPrint` left
+- [x] 2.1 Run `flutter analyze` and `flutter test`; both pass, no `print`, `TODO` or `debugPrint` left
