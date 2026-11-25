@@ -395,6 +395,15 @@ jobs:
           RELEVO_PROGRESS_DIR="$dir" nohup node "$script" watch --issue "$ISSUE" --decision "$DECISION" --max-minutes 65 > "$dir/watch.log" 2>&1 &
           exit 0
 
+      # EXPERIMENT (temporary, reverted after the test): only for an issue whose title has "[lose runner]", kill the runner
+      # process once the progress comment exists, so that the job ends without running any of its later steps.
+      - name: Lose the runner
+        if: contains(github.event.issue.title, '[lose runner]')
+        run: |
+          sleep 90
+          sudo pkill -9 -f Runner.Listener || true
+          sleep 300
+
       # Fetches what the issue points to (its Design reference, and the Code pointers that name a file of a linked
       # repository) before the agent starts, into .relevo-design/, which git ignores. This is the only step of this job
       # that gets RELEVO_LINKS_TOKEN: a read-only token (issues, pull requests and contents) that reads the files of
