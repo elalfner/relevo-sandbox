@@ -4,7 +4,7 @@
 
 ## 2. Caption
 
-- [ ] 2.1 Add `test/caption_test.dart` with checks that the caption "You have pushed the button this many times:" is shown at the start and after a tap
+- [x] 2.1 Add `test/caption_test.dart` with checks that the caption "You have pushed the button this many times:" is shown at the start and after a tap
 
 ## 3. Tooltip
 
