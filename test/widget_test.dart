@@ -119,6 +119,21 @@ void main() {
     expect(find.text('Odd'), findsNothing);
   });
 
+  testWidgets('Greeting is unchanged after a reset', (tester) async {
+    await tester.pumpWidget(MyApp(clock: () => DateTime(2026, 1, 1, 9)));
+    final greeting = find.byKey(const Key('greeting-text'));
+    expect(greeting, findsOneWidget);
+    final before = tester.widget<Text>(greeting).data;
+    expect(before, isNotEmpty);
+
+    await tapAdd(tester, 3);
+    await tester.tap(find.byKey(const Key('reset-button')));
+    await tester.pump();
+
+    expect(greeting, findsOneWidget);
+    expect(tester.widget<Text>(greeting).data, before);
+  });
+
   testWidgets('Two quick taps on reset leave the counter at 0', (tester) async {
     await tester.pumpWidget(const MyApp());
     await tapAdd(tester, 3);
