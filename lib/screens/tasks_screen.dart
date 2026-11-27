@@ -101,9 +101,17 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final text = controller.doneCount == 0
-        ? TasksStrings.header(controller.totalCount)
-        : TasksStrings.headerOpen(controller.openCount, controller.totalCount);
+    final String text;
+    if (controller.totalCount > 0 && controller.openCount == 0) {
+      text = TasksStrings.allDone;
+    } else if (controller.doneCount == 0) {
+      text = TasksStrings.header(controller.totalCount);
+    } else {
+      text = TasksStrings.headerOpen(
+        controller.openCount,
+        controller.totalCount,
+      );
+    }
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       child: Text(text, style: Theme.of(context).textTheme.titleMedium),

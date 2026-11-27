@@ -44,6 +44,9 @@ class TasksStrings {
   static const String homeButtonSemantics = 'Open tasks';
   static const String deleteAction = 'Delete task';
 
+  /// Header when the list has tasks and none is open.
+  static const String allDone = 'All done';
+
   /// Header count: "0 tasks", "1 task", "5 tasks".
   static String header(int total) => total == 1 ? '1 task' : '$total tasks';
 
