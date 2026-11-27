@@ -114,6 +114,25 @@ void main() {
       await tester.pump();
       expect(find.text('5 tasks'), findsOneWidget);
     });
+
+    testWidgets('All done, and the count is back once a task is reopened', (
+      tester,
+    ) async {
+      final controller = TaskListController()
+        ..add('One', TaskPriority.medium)
+        ..add('Two', TaskPriority.medium);
+      for (final task in controller.tasks.toList()) {
+        controller.toggle(task.id);
+      }
+      await pumpTasksScreen(tester, controller);
+      expect(find.text('All done'), findsOneWidget);
+
+      await tester.tap(find.byType(Checkbox).first);
+      await tester.pump();
+
+      expect(find.text('1 of 2 open'), findsOneWidget);
+      expect(find.text('All done'), findsNothing);
+    });
   });
 
   group('complete and filter', () {

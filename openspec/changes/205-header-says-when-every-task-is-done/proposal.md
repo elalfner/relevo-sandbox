@@ -17,4 +17,4 @@ When every task is done the header of the Tasks screen reads `0 of N open`, whic
 ## Impact
 
 - `lib/screens/tasks_screen.dart` (header choice) and `lib/screens/tasks_strings.dart` (the new text).
-- No dependency is added. No file under `test/` is added or changed (out of scope of the issue).
+- No dependency is added. `test/tasks_screen_test.dart` gains a widget test for the `All done` header, as the project rules require; this replaces the issue's exclusion of tests for that behaviour. No other test change.
