@@ -6,7 +6,7 @@
 
 ## 2. Task search
 
-- [ ] 2.1 Add `lib/models/task_search.dart` and `test/task_search_test.dart` covering `MILK` matching `Buy milk` only and the empty text returning every task in order; verify with `flutter test test/task_search_test.dart`
+- [x] 2.1 Add `lib/models/task_search.dart` and `test/task_search_test.dart` covering `MILK` matching `Buy milk` only and the empty text returning every task in order; verify with `flutter test test/task_search_test.dart`
 
 ## 3. Task summary
 
