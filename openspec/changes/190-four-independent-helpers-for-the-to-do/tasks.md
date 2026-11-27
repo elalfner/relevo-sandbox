@@ -10,7 +10,7 @@
 
 ## 3. Task summary
 
-- [ ] 3.1 Add `lib/models/task_summary.dart` and `test/task_summary_test.dart`; verify the tests for a done task and a pending task pass
+- [x] 3.1 Add `lib/models/task_summary.dart` and `test/task_summary_test.dart`; verify the tests for a done task and a pending task pass
 
 ## 4. Task order
 
