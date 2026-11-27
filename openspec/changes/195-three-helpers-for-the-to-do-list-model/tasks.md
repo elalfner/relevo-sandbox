@@ -2,7 +2,7 @@
 
 ## 1. Task counts
 
-- [ ] 1.1 Add `lib/models/task_counts.dart` and `test/task_counts_test.dart` covering 2 pending + 1 done and the empty list; verify with `flutter test test/task_counts_test.dart`
+- [x] 1.1 Add `lib/models/task_counts.dart` and `test/task_counts_test.dart` covering 2 pending + 1 done and the empty list; verify with `flutter test test/task_counts_test.dart`
 
 ## 2. Task search
 
