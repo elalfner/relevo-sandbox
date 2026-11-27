@@ -14,4 +14,4 @@
 
 ## 4. Checks
 
-- [ ] 4.1 Run `flutter analyze` and `flutter test` and verify both pass with no `print`, `TODO` or `debugPrint` left
+- [x] 4.1 Run `flutter analyze` and `flutter test` and verify both pass with no `print`, `TODO` or `debugPrint` left
