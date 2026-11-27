@@ -8,7 +8,7 @@
 
 ## 3. Task summary
 
-- [ ] 3.1 Add `lib/models/task_summary.dart` and `test/task_summary_test.dart`; verified by `flutter test` covering done and pending
+- [x] 3.1 Add `lib/models/task_summary.dart` and `test/task_summary_test.dart`; verified by `flutter test` covering done and pending
 
 ## 4. Checks
 
