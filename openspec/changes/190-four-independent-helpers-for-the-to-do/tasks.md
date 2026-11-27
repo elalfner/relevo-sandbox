@@ -6,7 +6,7 @@
 
 ## 2. Task search
 
-- [ ] 2.1 Add `lib/models/task_search.dart` and `test/task_search_test.dart`; verify the tests for the case-insensitive search and the empty text pass
+- [x] 2.1 Add `lib/models/task_search.dart` and `test/task_search_test.dart`; verify the tests for the case-insensitive search and the empty text pass
 
 ## 3. Task summary
 
