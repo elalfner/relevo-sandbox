@@ -93,7 +93,7 @@ jobs:
         # script this job runs stops the run here, before anything is changed.
         run: |
           mkdir -p .relevo-plugin
-          rm -rf "$RUNNER_TEMP/relevo-src" && git clone --quiet https://github.com/elalfner/relevo.git "$RUNNER_TEMP/relevo-src" && git -C "$RUNNER_TEMP/relevo-src" checkout --quiet 8caed13826487d731534e1e0a4f7bbc4a73d1622 && npm pack "$RUNNER_TEMP/relevo-src" --silent --pack-destination "$RUNNER_TEMP" > /dev/null
+          rm -rf "$RUNNER_TEMP/relevo-src" && git clone --quiet https://github.com/elalfner/relevo.git "$RUNNER_TEMP/relevo-src" && git -C "$RUNNER_TEMP/relevo-src" checkout --quiet 46c99ba06c142a58521eb2e103b27321abf00138 && npm pack "$RUNNER_TEMP/relevo-src" --silent --pack-destination "$RUNNER_TEMP" > /dev/null
           tar -xzf "$RUNNER_TEMP"/elalfner-relevo-*.tgz --strip-components=1 -C .relevo-plugin
           for f in scripts/go-plan.mjs scripts/render-message.mjs; do
             [ -f ".relevo-plugin/$f" ] || { echo "::error::The Relevo package $RELEVO_VERSION lacks $f"; exit 1; }
@@ -201,7 +201,7 @@ jobs:
           ISSUE: ${{ github.event.issue.number || inputs.issue }}
         run: |
           mkdir -p "$RUNNER_TEMP/relevo"
-          rm -rf "$RUNNER_TEMP/relevo-src" && git clone --quiet https://github.com/elalfner/relevo.git "$RUNNER_TEMP/relevo-src" && git -C "$RUNNER_TEMP/relevo-src" checkout --quiet 8caed13826487d731534e1e0a4f7bbc4a73d1622 && npm pack "$RUNNER_TEMP/relevo-src" --silent --pack-destination "$RUNNER_TEMP" > /dev/null || exit 0
+          rm -rf "$RUNNER_TEMP/relevo-src" && git clone --quiet https://github.com/elalfner/relevo.git "$RUNNER_TEMP/relevo-src" && git -C "$RUNNER_TEMP/relevo-src" checkout --quiet 46c99ba06c142a58521eb2e103b27321abf00138 && npm pack "$RUNNER_TEMP/relevo-src" --silent --pack-destination "$RUNNER_TEMP" > /dev/null || exit 0
           tar -xzf "$RUNNER_TEMP"/elalfner-relevo-*.tgz --strip-components=1 -C "$RUNNER_TEMP/relevo" || exit 0
           script="$RUNNER_TEMP/relevo/scripts/progress.mjs"
           [ -f "$script" ] || exit 0
@@ -343,7 +343,7 @@ jobs:
           PLATFORM: ${{ needs.decide.outputs.platform }}
         run: |
           mkdir -p "$RUNNER_TEMP/relevo"
-          rm -rf "$RUNNER_TEMP/relevo-src" && git clone --quiet https://github.com/elalfner/relevo.git "$RUNNER_TEMP/relevo-src" && git -C "$RUNNER_TEMP/relevo-src" checkout --quiet 8caed13826487d731534e1e0a4f7bbc4a73d1622 && npm pack "$RUNNER_TEMP/relevo-src" --silent --pack-destination "$RUNNER_TEMP" > /dev/null
+          rm -rf "$RUNNER_TEMP/relevo-src" && git clone --quiet https://github.com/elalfner/relevo.git "$RUNNER_TEMP/relevo-src" && git -C "$RUNNER_TEMP/relevo-src" checkout --quiet 46c99ba06c142a58521eb2e103b27321abf00138 && npm pack "$RUNNER_TEMP/relevo-src" --silent --pack-destination "$RUNNER_TEMP" > /dev/null
           tar -xzf "$RUNNER_TEMP"/elalfner-relevo-*.tgz --strip-components=1 -C "$RUNNER_TEMP/relevo"
           for f in scripts/toolchain-check.mjs scripts/render-message.mjs scripts/design-fetch.mjs .claude-plugin/plugin.json; do
             [ -f "$RUNNER_TEMP/relevo/$f" ] || { echo "::error::The Relevo package $RELEVO_VERSION lacks $f"; exit 1; }
@@ -614,7 +614,7 @@ jobs:
         continue-on-error: true
         run: |
           mkdir -p .relevo-plugin
-          rm -rf "$RUNNER_TEMP/relevo-src" && git clone --quiet https://github.com/elalfner/relevo.git "$RUNNER_TEMP/relevo-src" && git -C "$RUNNER_TEMP/relevo-src" checkout --quiet 8caed13826487d731534e1e0a4f7bbc4a73d1622 && npm pack "$RUNNER_TEMP/relevo-src" --silent --pack-destination "$RUNNER_TEMP" > /dev/null
+          rm -rf "$RUNNER_TEMP/relevo-src" && git clone --quiet https://github.com/elalfner/relevo.git "$RUNNER_TEMP/relevo-src" && git -C "$RUNNER_TEMP/relevo-src" checkout --quiet 46c99ba06c142a58521eb2e103b27321abf00138 && npm pack "$RUNNER_TEMP/relevo-src" --silent --pack-destination "$RUNNER_TEMP" > /dev/null
           tar -xzf "$RUNNER_TEMP"/elalfner-relevo-*.tgz --strip-components=1 -C .relevo-plugin
           for f in scripts/run-usage.mjs scripts/usage-limit.mjs scripts/limit-retry.mjs scripts/run-cut.mjs scripts/rescue-work.mjs scripts/progress.mjs scripts/tree-baseline.mjs scripts/render-message.mjs scripts/transcript.mjs scripts/run-output.mjs; do
             [ -f ".relevo-plugin/$f" ] || { echo "::error::The Relevo package $RELEVO_VERSION lacks $f"; exit 1; }
