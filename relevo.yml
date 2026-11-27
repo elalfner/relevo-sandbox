@@ -26,11 +26,12 @@ review:
   merger: approver     # author | approver: who runs /relevo:ship
 
 limits:
-  built_unreviewed_per_person: 2   # built issues one person may have waiting
+  built_unreviewed_per_person: 5   # built issues one person may have waiting
   concurrent_agents: 3             # unattended runs at the same time
   review_sla_hours: 8              # reminder, then escalation after the same time again
   run_max_turns: 100               # per unattended run
   run_max_cost: 5                  # REQUIRED: US dollars per unattended run; choose your own
+  run_max_minutes: 5               # TEMPORARY: reproduction of a time limit
 
 qa:
   retries: 1                       # developer attempts after QA rejects
@@ -46,3 +47,6 @@ trust: private-team                # private-team | public
 # labels:
 #   ready: relevo:ready
 #   built: relevo:built
+
+run:
+  full_output: true   # TEMPORARY: reproduction of a time limit
