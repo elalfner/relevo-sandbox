@@ -610,7 +610,8 @@ jobs:
       # TEMPORARY: hook test
       - name: Show the hook log
         if: always()
-        run: cat "$RUNNER_TEMP/relevo-spike.jsonl" || echo "SPIKE-220: no hook log"
+        run: |
+          cat "$RUNNER_TEMP/relevo-spike.jsonl" || echo "SPIKE-220: no hook log"
 
       # The scripts of the next two steps come from the plugin package. It is unpacked into the workspace only now, after the agent has
       # finished, because the agent's preflight needs a clean working tree and a checkout inside it would not be.
