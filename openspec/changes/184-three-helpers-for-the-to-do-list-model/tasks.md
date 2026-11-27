@@ -4,7 +4,7 @@
 
 ## 2. Task search
 
-- [ ] 2.1 Add `lib/models/task_search.dart` and `test/task_search_test.dart`; verified by `flutter test` covering `MILK` and the empty text
+- [x] 2.1 Add `lib/models/task_search.dart` and `test/task_search_test.dart`; verified by `flutter test` covering `MILK` and the empty text
 
 ## 3. Task summary
 
