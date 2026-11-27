@@ -46,3 +46,6 @@ trust: private-team                # private-team | public
 # labels:
 #   ready: relevo:ready
 #   built: relevo:built
+
+run:
+  full_output: true   # TEMPORARY: hook test
