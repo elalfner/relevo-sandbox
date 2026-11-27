@@ -10,7 +10,7 @@
 
 ## 3. Task summary
 
-- [ ] 3.1 Add `lib/models/task_summary.dart` and `test/task_summary_test.dart` covering `Buy milk (high, done)` and the `pending` form; verify with `flutter test test/task_summary_test.dart`
+- [x] 3.1 Add `lib/models/task_summary.dart` and `test/task_summary_test.dart` covering `Buy milk (high, done)` and the `pending` form; verify with `flutter test test/task_summary_test.dart`
 
 ## 4. Checks
 
