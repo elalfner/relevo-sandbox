@@ -6,7 +6,7 @@
 
 ## 2. Task search
 
-- [ ] 2.1 Add `lib/models/task_search.dart` and `test/task_search_test.dart` covering case-insensitive match and empty text; verify `flutter test test/task_search_test.dart` passes
+- [x] 2.1 Add `lib/models/task_search.dart` and `test/task_search_test.dart` covering case-insensitive match and empty text; verify `flutter test test/task_search_test.dart` passes
 
 ## 3. Task summary
 
