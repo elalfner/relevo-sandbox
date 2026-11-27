@@ -2,7 +2,7 @@
 
 ## 1. Task counts
 
-- [ ] 1.1 Add `lib/models/task_counts.dart` and `test/task_counts_test.dart`; verify the tests for the mixed list and the empty list pass
+- [x] 1.1 Add `lib/models/task_counts.dart` and `test/task_counts_test.dart`; verify the tests for the mixed list and the empty list pass
 
 ## 2. Task search
 
