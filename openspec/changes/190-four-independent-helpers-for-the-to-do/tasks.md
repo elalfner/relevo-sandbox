@@ -14,4 +14,4 @@
 
 ## 4. Task order
 
-- [ ] 4.1 Add `lib/models/task_order.dart` and `test/task_order_test.dart`; verify the test for the case-insensitive order passes
+- [x] 4.1 Add `lib/models/task_order.dart` and `test/task_order_test.dart`; verify the test for the case-insensitive order passes
