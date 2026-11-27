@@ -10,5 +10,5 @@
 
 ## 3. Task summary
 
-- [ ] 3.1 Add `lib/models/task_summary.dart` and `test/task_summary_test.dart` covering done and pending tasks; verify `flutter test test/task_summary_test.dart` passes
+- [x] 3.1 Add `lib/models/task_summary.dart` and `test/task_summary_test.dart` covering done and pending tasks; verify `flutter test test/task_summary_test.dart` passes
 - [ ] 3.2 Verify `flutter analyze` and `flutter test` pass with no `print`, `TODO` or `debugPrint` left
